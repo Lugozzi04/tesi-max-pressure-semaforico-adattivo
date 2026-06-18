@@ -18,9 +18,6 @@ La tesi esplora il **controllo adattivo del traffico urbano** utilizzando l'algo
 - **SUMO** (Simulation of Urban MObility) — simulatore open-source
 - **Python** — scripting e analisi dati
 - **TraCI** — interfaccia Python-SUMO
-- **Matplotlib / Pandas** — visualizzazione risultati
 
 ---
-
-*Repository in fase di sviluppo — il codice verrà caricato durante la stesura della tesi.*
 
