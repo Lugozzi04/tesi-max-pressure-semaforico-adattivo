@@ -9,7 +9,7 @@ La tesi esplora il **controllo adattivo del traffico urbano** utilizzando l'algo
 ### Metodologia
 
 - **Progettazione** del controllore Max-Pressure per intersezioni semaforizzate
-- **Implementazione** in ambiente di simulazione (SUMO / Aimsun / VISSIM)
+- **Implementazione** in ambiente di simulazione (SUMO)
 - **Valutazione** comparativa delle performance: throughput, ritardi, code, emissioni
 - **Confronto** con strategie tradizionali (fixed-time, actuated)
 
