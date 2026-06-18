@@ -21,10 +21,26 @@ La tesi esplora il **controllo adattivo del traffico urbano** utilizzando l'algo
 
 ### Dipendenze LaTeX
 
-Per installare tutti i pacchetti necessari al progetto LaTeX su Ubuntu/Debian:
+Usa lo script giusto per il tuo sistema operativo:
+
+- Ubuntu/Debian:
 
 ```bash
 bash install-latex-deps.sh
 ```
+
+- macOS:
+
+```bash
+bash install-latex-deps-macos.sh
+```
+
+- Windows:
+
+```powershell
+.\install-latex-deps.ps1
+```
+
+Su macOS serve Homebrew. Su Windows serve `winget` e MiKTeX scarica automaticamente i pacchetti mancanti quando compili.
 
 ---
