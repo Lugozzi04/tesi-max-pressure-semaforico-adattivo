@@ -19,5 +19,12 @@ La tesi esplora il **controllo adattivo del traffico urbano** utilizzando l'algo
 - **Python** — scripting e analisi dati
 - **TraCI** — interfaccia Python-SUMO
 
----
+### Dipendenze LaTeX
 
+Per installare tutti i pacchetti necessari al progetto LaTeX su Ubuntu/Debian:
+
+```bash
+bash install-latex-deps.sh
+```
+
+---
