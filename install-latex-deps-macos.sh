@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Installa le dipendenze LaTeX su macOS usando Homebrew.
 # Il progetto usa MacTeX (full TeX Live senza GUI) e poppler.
+# Alla fine compila subito la tesi nella stessa shell.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -34,8 +35,18 @@ if [[ -x /usr/libexec/path_helper ]]; then
     eval "$(/usr/libexec/path_helper -s)"
 fi
 
+if [[ -d /Library/TeX/texbin ]]; then
+    export PATH="/Library/TeX/texbin:$PATH"
+fi
+
+cd "$SCRIPT_DIR"
+
 echo
-echo "Dipendenze installate."
-echo "Se la shell non vede ancora i comandi TeX, riaprila."
-echo "Per compilare la tesi completa:"
-echo "  cd \"$SCRIPT_DIR\" && latexmk -pdf -synctex=1 -interaction=nonstopmode -halt-on-error tesi.tex"
+echo "Compilazione iniziale in corso..."
+pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -halt-on-error tesi.tex
+biber tesi
+pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -halt-on-error tesi.tex
+pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -halt-on-error tesi.tex
+
+echo
+echo "Compilazione completata."

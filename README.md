@@ -41,6 +41,6 @@ bash install-latex-deps-macos.sh
 .\install-latex-deps.ps1
 ```
 
-Su macOS serve Homebrew. Su Windows serve `winget` e MiKTeX scarica automaticamente i pacchetti mancanti quando compili.
+Su macOS serve Homebrew. Su Windows serve `winget`; tutti gli script installano le dipendenze e lanciano subito la compilazione con `pdflatex -> biber -> pdflatex -> pdflatex`, quindi non serve installare `perl`.
 
 ---

@@ -1,0 +1,16 @@
+# LaTeX build artifacts
+*.aux
+*.bcf
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+
+# Optional local build directories
+_minted-*
+out/

@@ -81,7 +81,7 @@
 % FIGURE, TABELLE, DIDASCALIE
 % =========================================================
 \usepackage{graphicx}
-\graphicspath{{figures/}}
+\graphicspath{{img/}{figures/}}
 
 \usepackage{float}
 \usepackage{subcaption}
@@ -243,12 +243,9 @@
         \thispagestyle{empty}
         \centering
 
-        {\Large\bfseries
-        UNIVERSITÀ DEGLI STUDI DI\par
-        MODENA E REGGIO EMILIA
-        \par}
+        \includegraphics[width=0.72\textwidth]{Logo_A_Positivo_Colore}\par
 
-        \vspace{1cm}
+        \vspace{0.7cm}
 
         {\large
         Dipartimento di Scienze Fisiche, Informatiche e Matematiche
@@ -470,7 +467,7 @@ al contrario, è rimasta operativamente identica al Max-Pressure di base.
 
 \section{Organizzazione della tesi}
 
-Il \cref{chap:stato-arte} presenta il controllo semaforico adattivo, il
+Il capitolo seguente presenta il controllo semaforico adattivo, il
 Max-Pressure e gli strumenti di simulazione. La parte successiva della tesi
 definisce requisiti e architettura della piattaforma, descrive
 l'implementazione del controller e delle estensioni, formalizza il protocollo

@@ -1,9 +1,42 @@
 # Installa le dipendenze LaTeX su Windows usando MiKTeX.
 # MiKTeX scarica automaticamente i pacchetti mancanti quando compili.
+# Il workspace usa una recipe LaTeX Workshop basata su pdflatex + biber,
+# quindi non serve Perl.
 
 $ErrorActionPreference = 'Stop'
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+function Add-MiKTeXPathToSession {
+    $CandidatePaths = @(
+        (Join-Path $env:LOCALAPPDATA 'Programs\MiKTeX\miktex\bin\x64'),
+        (Join-Path $env:ProgramFiles 'MiKTeX\miktex\bin\x64')
+    )
+
+    foreach ($CandidatePath in $CandidatePaths) {
+        if (Test-Path $CandidatePath) {
+            $CurrentPaths = $env:Path -split ';' | Where-Object { $_ }
+            if ($CurrentPaths -notcontains $CandidatePath) {
+                $env:Path = "$CandidatePath;$env:Path"
+            }
+        }
+    }
+}
+
+function Invoke-Tool {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Command,
+        [Parameter(Mandatory = $true)]
+        [string[]]$Arguments
+    )
+
+    Write-Host "Eseguo: $Command $($Arguments -join ' ')"
+    & $Command @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "$Command ha restituito codice $LASTEXITCODE."
+    }
+}
 
 function Invoke-WingetInstall {
     param(
@@ -35,6 +68,8 @@ if (-not $Installed) {
     throw "Impossibile installare MiKTeX con winget."
 }
 
+Add-MiKTeXPathToSession
+
 $Initexmf = Get-Command initexmf -ErrorAction SilentlyContinue
 if ($Initexmf) {
     & $Initexmf.Source '--set-config-value=[MPM]AutoInstall=1'
@@ -46,8 +81,34 @@ if ($Initexmf) {
     Write-Host "Apri MiKTeX Console e imposta 'Always install missing packages on-the-fly'."
 }
 
-Write-Host ""
-Write-Host "Dipendenze installate."
-Write-Host "Apri una nuova shell, poi compila con:"
-Write-Host "  cd `"$ScriptDir`""
-Write-Host "  latexmk -pdf -synctex=1 -interaction=nonstopmode -halt-on-error tesi.tex"
+Push-Location $ScriptDir
+try {
+    Write-Host ""
+    Write-Host "Compilazione iniziale in corso..."
+    Invoke-Tool -Command 'pdflatex' -Arguments @(
+        '-synctex=1',
+        '-interaction=nonstopmode',
+        '-file-line-error',
+        '-halt-on-error',
+        'tesi.tex'
+    )
+    Invoke-Tool -Command 'biber' -Arguments @('tesi')
+    Invoke-Tool -Command 'pdflatex' -Arguments @(
+        '-synctex=1',
+        '-interaction=nonstopmode',
+        '-file-line-error',
+        '-halt-on-error',
+        'tesi.tex'
+    )
+    Invoke-Tool -Command 'pdflatex' -Arguments @(
+        '-synctex=1',
+        '-interaction=nonstopmode',
+        '-file-line-error',
+        '-halt-on-error',
+        'tesi.tex'
+    )
+    Write-Host ""
+    Write-Host "Compilazione completata."
+} finally {
+    Pop-Location
+}

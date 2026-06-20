@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Installa le dipendenze LaTeX necessarie per compilare la tesi.
 # Target: Ubuntu/Debian o distribuzioni derivate con apt-get.
+# Alla fine compila subito la tesi nella stessa shell.
 
 if ! command -v apt-get >/dev/null 2>&1; then
     echo "Errore: questo script richiede apt-get. Usalo su Ubuntu/Debian."
@@ -38,7 +39,14 @@ ${SUDO} apt-get update
 echo "Installo dipendenze LaTeX per la tesi..."
 ${SUDO} apt-get install -y "${PACKAGES[@]}"
 
+cd "$SCRIPT_DIR"
+
 echo
-echo "Dipendenze installate."
-echo "Per compilare la tesi completa:"
-echo "  cd \"$SCRIPT_DIR\" && latexmk -pdf -synctex=1 -interaction=nonstopmode -halt-on-error tesi.tex"
+echo "Compilazione iniziale in corso..."
+pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -halt-on-error tesi.tex
+biber tesi
+pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -halt-on-error tesi.tex
+pdflatex -synctex=1 -interaction=nonstopmode -file-line-error -halt-on-error tesi.tex
+
+echo
+echo "Compilazione completata."
