@@ -473,8 +473,10 @@ OUTPUT tesi.pdf
 INPUT ./tesi.out
 INPUT ./tesi.out
 OUTPUT tesi.out
-INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-t1.tfm
-INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-t1.tfm
+INPUT ./img/Logo_A_Positivo_Colore.png
+INPUT ./img/Logo_A_Positivo_Colore.png
+INPUT ./img/Logo_A_Positivo_Colore.png
+INPUT ./img/Logo_A_Positivo_Colore.png
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-t1.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-t1.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-t1.tfm
@@ -556,6 +558,8 @@ INPUT ./tesi.toc
 INPUT ./tesi.toc
 INPUT tesi.toc
 OUTPUT tesi.toc
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-t1.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-t1.tfm
 INPUT /usr/share/texlive/texmf-dist/tex/latex/newtx/t1ntxtt.fd
 INPUT /usr/share/texlive/texmf-dist/tex/latex/newtx/t1ntxtt.fd
 INPUT /usr/share/texlive/texmf-dist/tex/latex/newtx/t1ntxtt.fd
@@ -578,6 +582,8 @@ INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/stxscr.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/vf/public/newtx/ntxmia.vf
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/txmiaX.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/txmiaSTbb.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-t1.tfm
+INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Italic-tlf-t1.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-sc-t1.tfm
 INPUT /usr/share/texlive/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf-pc.enc
 INPUT tesi.aux

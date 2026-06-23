@@ -753,26 +753,258 @@ funzione alla volta ha permesso di attribuire i risultati e di individuare
 estensioni inattive o controproducenti. I capitoli seguenti descrivono questa
 architettura e l'implementazione risultante.
 
-% Traccia dei capitoli successivi mostrata solo nell'indice della versione
-% parziale consegnata al relatore.
-\addtocontents{toc}{\protect\contentsline {chapter}{\protect\numberline {3}Requisiti e progettazione del sistema}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {3.1}Requisiti funzionali}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {3.2}Requisiti non funzionali}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {3.3}Architettura generale}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {3.4}Flusso di esecuzione di una simulazione}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {3.5}Scelte progettuali}{}{}}
-\addtocontents{toc}{\protect\contentsline {chapter}{\protect\numberline {4}Implementazione dei controller Max-Pressure}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {4.1}Rappresentazione dei semafori}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {4.2}Controller Max-Pressure di base}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {4.3}Macchina a stati del controller}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {4.4}Lost-Time-Aware}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {4.5}Minimo verde dinamico Nmin}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {4.6}Fairness}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {4.7}Penalità downstream}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {4.8}Anti-spillback}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {4.9}Platoon extension}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {4.10}Margini e stabilità dello switch}{}{}}
-\addtocontents{toc}{\protect\contentsline {section}{\protect\numberline {4.11}Contatori di attivazione}{}{}}
+\chapter{Requisiti e progettazione del sistema}
+\label{chap:progettazione}
+
+Un esperimento sui controller semaforici è credibile soltanto se la piattaforma
+evita confronti non omogenei e conserva abbastanza informazioni per
+riprodurre ogni risultato. Da questa esigenza derivano i requisiti e
+l'architettura descritti nel capitolo. La progettazione separa la politica di
+controllo dalla generazione del traffico e dalla valutazione, in modo che una
+modifica di un componente non alteri implicitamente gli altri.
+
+\section{Requisiti funzionali}
+
+Il sistema deve permettere di:
+
+\begin{enumerate}
+    \item selezionare una mappa SUMO e una popolazione di veicoli;
+    \item eseguire sia il programma semaforico nativo sia un controller
+    Max-Pressure configurabile;
+    \item associare a ogni variante un insieme esplicito di parametri;
+    \item generare più livelli e distribuzioni di domanda usando seed noti;
+    \item avanzare la simulazione fino all'esaurimento dei viaggi o a un limite
+    dichiarato;
+    \item salvare metriche per veicolo, metriche aggregate e contatori interni
+    del controller;
+    \item costruire automaticamente il prodotto cartesiano tra mappe, domande,
+    seed e scenari;
+    \item eseguire più casi in parallelo senza collisioni tra file;
+    \item produrre classifiche e differenze rispetto a una baseline scelta.
+\end{enumerate}
+
+Un requisito ulteriore, emerso durante lo sviluppo, è la capacità di rilevare
+errori prima di avviare campagne lunghe. La fase di preflight deve quindi
+controllare nomi delle mappe, scenari, file di rete, opzioni dei controller e
+percorsi di output.
+
+\section{Requisiti non funzionali}
+
+Oltre ai valori numerici, sono rilevanti riproducibilità, modularità e
+osservabilità. Questi requisiti hanno guidato scelte quali la serializzazione
+delle popolazioni, l'uso di configurazioni risolte e l'introduzione di contatori
+per le regole specialistiche.
+
+\subsection{Riproducibilità}
+
+Due controller devono essere confrontati sugli stessi veicoli, con le stesse
+route, gli stessi istanti di partenza e le stesse caratteristiche di guida. Per ogni coppia
+mappa--domanda--seed viene quindi generato un unico file di popolazione,
+riutilizzato da tutti gli scenari. Il seed compare sia nel nome sia nel
+contenuto del file. La directory di una campagna conserva inoltre la
+configurazione effettivamente risolta, evitando che un valore predefinito
+modificato in seguito renda ambiguo un risultato precedente.
+
+La riproducibilità non implica che seed diversi producano gli stessi valori;
+serve piuttosto a rendere controllata la variabilità. Nella valutazione finale
+su Manhattan ogni scenario viene eseguito sui medesimi cinque seed, consentendo
+confronti appaiati.
+
+\subsection{Modularità}
+
+Il simulatore, il controller, il generatore della domanda e la reportistica
+hanno responsabilità distinte. Tutti i controller rispettano un'interfaccia
+comune di collegamento e aggiornamento; il runner non deve conoscere la formula
+specifica con cui viene scelta una fase. Analogamente, la pipeline batch
+costruisce comandi per una simulazione singola senza duplicarne la logica.
+
+Le estensioni del Max-Pressure sono abilitate da flag e parametri. Questo
+consente di mantenere un solo nucleo implementativo e di definire scenari
+sperimentali come configurazioni, anziché creare copie divergenti del
+controller.
+
+\subsection{Osservabilità}
+
+Una differenza nelle metriche finali non rivela da sola il comportamento che
+l'ha prodotta. Il sistema registra quindi numero di switch, attivazioni del
+massimo verde, passi di hold Nmin, eventi di blocco e rilascio spillback,
+prolungamenti per plotone e bonus di fairness. Se una variante coincide
+numericamente con il controller base e il suo contatore rimane a zero, è
+possibile concludere che il meccanismo non è stato sollecitato, non che abbia
+fallito dopo essersi attivato.
+
+Ogni worker scrive inoltre un log separato. Il file di progresso aggrega casi
+completati, riusciti e falliti, rendendo possibile controllare una campagna
+eseguita in background.
+
+\section{Architettura generale}
+
+La \cref{fig:architettura} mostra i componenti principali. La pipeline
+sperimentale genera la matrice dei casi e usa il runner per avviare processi SUMO
+indipendenti. Il runner carica la popolazione, collega il controller mediante
+TraCI e inoltra le osservazioni al modulo delle metriche. Al termine, gli
+output dei casi vengono aggregati in report di campagna.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}[
+        node distance=8mm and 12mm,
+        box/.style={draw, rounded corners, align=center, minimum height=11mm,
+                    text width=34mm, fill=black!3},
+        data/.style={draw, cylinder, shape border rotate=90, aspect=0.22,
+                     align=center, minimum height=12mm, text width=29mm,
+                     fill=black!3},
+        arrow/.style={-{Latex[length=2.2mm]}, thick},
+        biarrow/.style={<->, >={Latex[length=2.2mm]}, thick}
+    ]
+        \node[box] (ablation) {Pipeline sperimentale\\\texttt{run\_ablation.py}};
+        \node[box, right=of ablation] (runner) {Runner della simulazione\\\texttt{runner.py}};
+        \node[box, right=of runner] (sumo) {SUMO\\dinamica microscopica};
+        \node[data, below=of ablation] (population) {Popolazione YAML};
+        \node[box, below=of runner] (controller) {Controller\\fixed o Max-Pressure};
+        \node[box, below=of sumo] (traci) {TraCI\\osservazioni e comandi};
+        \node[data, below=18mm of controller] (outputs) {CSV, tripinfo,\\contatori e log};
+        \node[box, left=of outputs] (reports) {Aggregazione e report};
+
+        \draw[arrow] (ablation.east) -- (runner.west);
+        \draw[arrow] (ablation.south) -- (population.north);
+        \draw[arrow] (population.north east) -- (runner.south west);
+        \draw[arrow] (runner.east) -- (sumo.west);
+        \draw[arrow] (runner.south) -- (controller.north);
+        \draw[biarrow] (sumo.south) -- (traci.north);
+        \draw[biarrow] (traci.west) -- (controller.east);
+        \draw[arrow] (runner.south east) -- ++(7mm,-7mm)
+            |- (outputs.east);
+        \draw[arrow] (outputs.west) -- (reports.east);
+        \draw[arrow] (ablation.west) -- ++(-8mm,0)
+            |- (reports.west);
+    \end{tikzpicture}
+    \caption{Architettura della piattaforma sperimentale.}
+    \label{fig:architettura}
+\end{figure}
+
+\subsection{Runner delle simulazioni}
+
+\texttt{runner.py} è il punto di ingresso per un singolo caso. Il modulo
+interpreta gli argomenti, individua i file della mappa, avvia SUMO, carica la
+popolazione e istanzia il controller richiesto. Il ciclo principale continua
+finché \texttt{getMinExpectedNumber()} segnala veicoli presenti o ancora attesi,
+oppure finché viene raggiunto il limite opzionale di passi.
+
+A ogni iterazione il runner avanza SUMO e invoca l'aggiornamento del
+controller. Alla chiusura legge il file \texttt{tripinfo}, combina le
+informazioni di viaggio con i contatori online e scrive i risultati del caso.
+Questa sequenza centralizza il ciclo di vita della simulazione e garantisce che
+fixed e Max-Pressure differiscano soltanto nella politica semaforica.
+
+\subsection{Generazione delle popolazioni}
+
+\texttt{generate\_population.py} seleziona route valide dalla mappa e genera
+veicoli con istante di partenza, tipo e parametri di guida. Il risultato è un
+file YAML leggibile e riutilizzabile. \texttt{src/population.py} traduce poi
+questa descrizione in comandi TraCI durante l'esecuzione.
+
+La separazione tra generazione e simulazione impedisce che due scenari
+consumino in ordine diverso lo stesso generatore casuale. Il traffico non viene
+rigenerato per ogni controller: una data popolazione è un input immutabile del
+confronto.
+
+\subsection{Controller semaforici}
+
+La classe base definisce il contratto comune. Il controller fixed può lasciare
+in esecuzione un programma esistente o modificarne selettivamente il verde. Il
+controller Max-Pressure costruisce, per ogni semaforo, una rappresentazione di
+fasi principali, movimenti, corsie e stato temporale. Tutti i semafori della
+mappa vengono collegati all'avvio e aggiornati in modo decentralizzato.
+
+La configurazione del Max-Pressure è parametrica. Gli scenari non contengono
+codice, ma combinazioni di flag quali \texttt{--lost-time-aware},
+\texttt{--nmin-dynamic} o \texttt{--spillback-block}. Questa scelta ha reso
+possibile correggere il nucleo una sola volta e confrontare varianti che
+condividono la medesima gestione delle transizioni.
+
+\subsection{Raccolta e aggregazione delle metriche}
+
+Le metriche online descrivono lo stato e le decisioni del controller; quelle
+post-simulazione provengono dai viaggi completati. Per ciascun caso vengono
+salvati un CSV per veicolo, un riepilogo e i log. La pipeline combina poi i
+casi in:
+
+\begin{itemize}
+    \item \texttt{run\_results.csv}, una riga per simulazione;
+    \item \texttt{summary\_by\_group.csv}, statistiche aggregate per scenario;
+    \item \texttt{summary\_vs\_base.csv}, differenze rispetto alla baseline;
+    \item \texttt{summary.md}, tabella leggibile della campagna;
+    \item \texttt{winners.txt} e \texttt{table.txt}, classifiche sintetiche;
+    \item \texttt{config\_resolved.yaml}, configurazione effettiva.
+\end{itemize}
+
+Sebbene il formato generico possa contenere campi prodotti da SUMO per analisi
+di altro tipo, la tesi aggrega e interpreta esclusivamente metriche di mobilità
+e completezza dei viaggi.
+
+\section{Flusso di esecuzione di una simulazione}
+
+Il flusso completo è il seguente:
+
+\begin{enumerate}
+    \item la pipeline risolve mappe, scenari, livelli di domanda e seed;
+    \item per ogni combinazione mappa--distribuzione--domanda--seed genera o
+    recupera dalla cache una popolazione;
+    \item un worker prepara una directory isolata e avvia il runner;
+    \item il runner avvia un processo SUMO con i file della mappa;
+    \item i veicoli vengono inseriti secondo il file YAML;
+    \item il controller analizza i programmi semaforici e costruisce il proprio
+    stato interno;
+    \item a ogni passo SUMO aggiorna veicoli e corsie, quindi il controller
+    osserva lo stato e può richiedere una nuova fase;
+    \item al termine vengono chiusi TraCI e SUMO e viene analizzato il
+    \texttt{tripinfo};
+    \item il worker registra successo o fallimento e aggiorna il progresso;
+    \item completati tutti i casi, i risultati vengono raggruppati per mappa,
+    distribuzione, domanda e scenario.
+\end{enumerate}
+
+La generazione delle popolazioni precede l'esecuzione parallela. In questo modo
+nessun worker modifica un input condiviso mentre altri casi sono in corso.
+
+\section{Scelte progettuali}
+
+\subsection{Separazione tra controller e simulatore}
+
+Si è scelto di non incorporare la logica adattiva nei file XML dei programmi
+semaforici. Il controller Python osserva e comanda SUMO mediante TraCI. Il
+vantaggio è la facilità di sperimentazione e di strumentazione, lo svantaggio è
+un costo di comunicazione a ogni passo. Per le dimensioni studiate, la maggiore
+chiarezza e modificabilità prevalgono su tale costo.
+
+La separazione consente inoltre di preservare le transizioni definite nella
+mappa. Il controller sceglie una fase principale target, ma non sintetizza
+arbitrariamente una stringa di segnali potenzialmente insicura.
+
+\subsection{Configurazione mediante parametri}
+
+Le varianti sono definite in uno \emph{scenario pack}. Ogni scenario associa
+un nome stabile al controller e ai flag. La configurazione dichiarativa riduce
+gli errori nei comandi lunghi, permette di riportare esattamente i parametri
+nei risultati e rende semplice escludere combinazioni non pertinenti. Per la
+campagna Manhattan sono state scelte una variante rappresentativa per ciascuna
+famiglia, anziché tutte le combinazioni esplorate durante il tuning.
+
+\subsection{Gestione delle mappe reali e sintetiche}
+
+Le mappe sintetiche hanno topologia regolare e sono adatte a isolare il
+comportamento algoritmico. Le mappe reali contengono numeri diversi di corsie,
+fasi eterogenee, svolte, segmenti brevi e piani semaforici specifici. Il layer
+di risoluzione dei percorsi e l'analisi dinamica dei programmi evitano di
+codificare nel controller gli identificativi di una singola rete.
+
+Non tutte le strategie sono tuttavia trasferibili senza adattamento. Un
+programma statico specifico della mappa, come il program0 di Bologna, non ha un
+equivalente semantico universale. Per questo i capitoli sperimentali separano
+la valutazione generale su Manhattan dagli sviluppi specifici della rete
+reale.
+
 
 \cleardoublepage
 \chapter*{Appendici}

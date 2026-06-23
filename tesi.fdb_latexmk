@@ -1,12 +1,12 @@
 # Fdb version 4
-["biber tesi"] 1781790464.71821 "tesi.bcf" "tesi.bbl" "tesi" 1781790468.43866 0
+["biber tesi"] 1782208282.15615 "tesi.bcf" "tesi.bbl" "tesi" 1782208394.46467 0
   "bibliografia.bib" 1781787691.55304 9334 d585f164020890748c92156c49e3d7df ""
-  "tesi.bcf" 1781790468.35714 110067 7b2f519f58da95a6f603f5d254716fba "pdflatex"
+  "tesi.bcf" 1782208394.38417 110067 7b2f519f58da95a6f603f5d254716fba "pdflatex"
   (generated)
   "tesi.bbl"
   "tesi.blg"
   (rewritten before read)
-["pdflatex"] 1781790467.34203 "tesi.tex" "tesi.pdf" "tesi" 1781790468.43886 0
+["pdflatex"] 1782208393.22854 "tesi.tex" "tesi.pdf" "tesi" 1782208394.46486 0
   "/etc/texmf/web2c/texmf.cnf" 1781181955.21747 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf-pc.enc" 1698694482 3136 bbe665bd0bb471a2da1e8fd326cff9fa ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf.enc" 1698694482 2914 fdbc4a54b9bc76f4551b5303f2737d33 ""
@@ -311,12 +311,13 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1781789706.27733 5349216 bf3a80e68d946c7acd95ff030fd9bb63 ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1781789710 6832302 834702b7db51e8127b78b0fb6308da0e ""
-  "tesi.aux" 1781790468.34014 11120 342ad6bfed8346242179c30071739e99 "pdflatex"
-  "tesi.bbl" 1781790465.09611 42570 3af3843833d38382e354eea41129148a "biber tesi"
-  "tesi.out" 1781790468.35514 5358 c0c798df8f4aae5aa9b9bf9ca3e100ec "pdflatex"
-  "tesi.run.xml" 1781790468.35834 2313 39f255d0c0a315c7cad3c120f97dc340 "pdflatex"
-  "tesi.tex" 1781789369.65571 33344 80a19b20bee4d2283b1383ab79781ad0 ""
-  "tesi.toc" 1781790468.35834 3941 0d90cb883e72c83437db43b5557e8ae0 "pdflatex"
+  "img/Logo_A_Positivo_Colore.png" 1782207850.94507 45702 e8a9122afa322364135b2247b5386518 ""
+  "tesi.aux" 1782208394.36717 12288 fc34c73edf72a6b3ea6e416a1b7e2821 "pdflatex"
+  "tesi.bbl" 1782208282.51884 42570 3af3843833d38382e354eea41129148a "biber tesi"
+  "tesi.out" 1782208394.38317 8508 c4ddfb1af7f55e5f97b328e852c95888 "pdflatex"
+  "tesi.run.xml" 1782208394.38607 2313 39f255d0c0a315c7cad3c120f97dc340 "pdflatex"
+  "tesi.tex" 1782208379.16538 43802 8482a9b54344f1deff1e27990f2ae2c3 ""
+  "tesi.toc" 1782208394.38607 4142 e99bed70d53de9d91b9d1baae211203f "pdflatex"
   (generated)
   "tesi.aux"
   "tesi.bcf"
