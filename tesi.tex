@@ -418,7 +418,7 @@ piattaforma registra esplicitamente la quota di viaggi non conclusi e considera
 la censura una condizione necessaria per interpretare correttamente le altre
 metriche.
 
-\section{Obiettivi della tesi}
+\section{Obiettivi del lavoro di tesi}
 
 Gli obiettivi sono i seguenti:
 
@@ -467,12 +467,15 @@ al contrario, è rimasta operativamente identica al Max-Pressure di base.
 
 \section{Organizzazione della tesi}
 
-Il capitolo seguente presenta il controllo semaforico adattivo, il
-Max-Pressure e gli strumenti di simulazione. La parte successiva della tesi
-definisce requisiti e architettura della piattaforma, descrive
-l'implementazione del controller e delle estensioni, formalizza il protocollo
-sperimentale e analizza prima la campagna Manhattan $8\times8$, poi
-l'applicazione alla rete reale di Bologna.
+Il \cref{chap:stato-arte} presenta il controllo semaforico adattivo, il
+Max-Pressure e gli strumenti di simulazione. Il \cref{chap:progettazione}
+definisce requisiti e architettura della piattaforma. Il
+\cref{chap:implementazione} descrive l'implementazione del controller e delle
+estensioni. Il \cref{chap:metodologia} formalizza il protocollo sperimentale,
+le popolazioni e le metriche. Il \cref{chap:manhattan} analizza la campagna
+Manhattan $8\times8$. La parte successiva della tesi applica le indicazioni
+ricavate alla rete di Bologna, introduce i controller ibridi sviluppati per la
+mappa reale e discute i risultati conclusivi.
 
 
 \chapter{Contesto e stato dell'arte}
@@ -567,7 +570,7 @@ La sottrazione della coda downstream distingue il Max-Pressure da una politica
 che osserva soltanto gli ingressi: un movimento perde priorità se conduce a
 una corsia già occupata. Formulazioni più generali includono turning ratio,
 pesi, portate di saturazione o stime dei tassi di svolta; alcuni lavori hanno
-studiato anche versioni che non richiedono routing rates noti a priori
+studiato anche versioni che non richiedono tassi di instradamento noti a priori
 \cite{gregoire2014unknownrouting}. La scelta semplificata adottata è coerente
 con l'obiettivo di ottenere un controller locale interpretabile e applicabile
 alle mappe disponibili.
@@ -679,7 +682,7 @@ veicoli. Per questo il progetto impiega una simulazione microscopica.
 
 \subsection{SUMO}
 
-SUMO, \emph{Simulation of Urban MObility}, è un simulatore open source,
+SUMO\footnote{\url{https://www.eclipse.org/sumo/}}, \emph{Simulation of Urban MObility}, è un simulatore open source,
 microscopico e a passi discreti, progettato per reti stradali di dimensione
 urbana \cite{behrisch2011sumo,sumodocs2026}. Le reti sono descritte tramite file
 XML contenenti archi, corsie, connessioni, incroci e programmi semaforici. La
@@ -693,7 +696,7 @@ necessarie.
 
 \subsection{Interfaccia TraCI}
 
-TraCI, \emph{Traffic Control Interface}, espone un protocollo con cui un
+TraCI\footnote{\url{https://sumo.dlr.de/docs/TraCI.html}}, \emph{Traffic Control Interface}, espone un protocollo con cui un
 processo esterno può interrogare e comandare una simulazione SUMO
 \cite{wegener2008traci,tracidocs2026}. A ogni passo il controller legge, tra le
 altre grandezze, veicoli fermi, occupazione delle corsie, stato delle fasi e
@@ -1005,6 +1008,360 @@ equivalente semantico universale. Per questo i capitoli sperimentali separano
 la valutazione generale su Manhattan dagli sviluppi specifici della rete
 reale.
 
+\chapter{Implementazione dei controller Max-Pressure}
+\label{chap:implementazione}
+
+Il calcolo della pressione occupa poche righe, la parte più delicata consiste
+nel trasformare quel calcolo in azioni compatibili con programmi semaforici
+eterogenei. Il capitolo descrive prima la rappresentazione dei semafori e la
+macchina a stati, quindi le estensioni valutate. Le formule corrispondono alla
+versione effettivamente utilizzata nella campagna Manhattan.
+
+\section{Rappresentazione dei semafori}
+
+All'avvio il controller interroga TraCI per ottenere tutti i semafori, le
+logiche disponibili e i link controllati. Per ciascun semaforo costruisce una
+struttura contenente numero e durata delle fasi, fasi principali, movimenti per
+fase, tempi di attesa interni e stato della transizione. La costruzione non
+presuppone identificativi specifici della mappa.
+
+Quando più logiche sono disponibili viene scelta quella con il maggior numero
+di fasi principali, preferendo il programma già attivo se appartiene ai
+candidati migliori. Questa regola evita di imporre universalmente un
+identificativo, ad esempio \texttt{1}, che su una mappa reale potrebbe avere un
+significato differente.
+
+\subsection{Identificazione delle fasi principali}
+
+Una fase è considerata principale se la stringa di stato contiene almeno un
+segnale verde, \texttt{g} o \texttt{G}, e non contiene segnali gialli. Le fasi
+solo gialle o rosse sono trattate come transizioni. Questa distinzione è
+necessaria perché il Max-Pressure deve scegliere tra configurazioni di servizio,
+non tra gli stati intermedi richiesti per passare in sicurezza da una
+configurazione all'altra.
+
+La classificazione è ricavata dalla logica SUMO e non da una lista scritta a
+mano. Ciò permette allo stesso controller di operare su incroci con numeri di
+fasi e lunghezze delle stringhe di segnale diversi.
+
+\subsection{Costruzione dei movimenti}
+
+\texttt{getControlledLinks()} associa ogni posizione della stringa semaforica
+a uno o più collegamenti tra corsia in ingresso e corsia in uscita. Per ogni
+fase principale il controller visita le posizioni verdi e costruisce
+l'insieme
+
+\begin{equation}
+    \mathcal{M}_\phi=\{(i,j)\mid \text{il movimento }i\rightarrow j
+    \text{ è verde nella fase }\phi\}.
+\end{equation}
+
+Eventuali duplicati vengono eliminati. Il risultato è una relazione esplicita
+tra una fase e le corsie sulle quali misurare code, occupazione e passaggi. Se
+una fase non abilita alcun movimento valido non partecipa alla selezione.
+
+\subsection{Conservazione delle transizioni di sicurezza}
+
+Il controller non passa direttamente da una stringa verde a un'altra. Quando
+seleziona un target, avanza alla fase successiva prevista dalla logica e
+memorizza il target come \texttt{pending\_target}. Durante giallo e all-red
+attende la durata configurata nel programma SUMO. Se la sequenza raggiunge una
+fase principale diversa dal target, effettua il riallineamento soltanto al
+termine della transizione.
+
+Questa soluzione conserva le durate di sicurezza della mappa e separa due
+decisioni: \emph{quale} fase servire e \emph{come} raggiungerla. Un meccanismo
+di recupero interviene se il semaforo rimane per almeno 20 secondi in uno stato
+non principale, condizione considerata anomala. Questa salvaguardia è stata
+introdotta dopo aver osservato stalli in campagne iniziali.
+
+\section{Controller Max-Pressure di base}
+
+\subsection{Misura delle code}
+
+La coda su una corsia è misurata mediante
+\texttt{getLastStepHaltingNumber()}, cioè il numero di veicoli considerati
+fermi nell'ultimo passo. La misura viene memorizzata in una cache valida per il
+passo corrente, perché la stessa corsia può comparire in più movimenti. Si
+indica con $q_l(t)$ il valore associato alla corsia $l$.
+
+La scelta del numero di veicoli fermi, anziché del numero totale presente,
+rende il punteggio sensibile alla congestione effettiva vicino
+all'intersezione. Non rappresenta tuttavia in modo completo veicoli in
+avvicinamento o capacità fisica residua, le estensioni downstream e platoon
+sono state introdotte anche per compensare questa limitazione.
+
+\subsection{Calcolo della pressione}
+
+Per ogni movimento $(i,j)$ si applica l'\cref{eq:movement-pressure}. La
+pressione della fase è la somma dell'\cref{eq:phase-pressure}. In assenza di
+estensioni, l'algoritmo produce inoltre la domanda della fase
+
+\begin{equation}
+    D_\phi(t)=\sum_{(i,j)\in\mathcal{M}_\phi}q_i(t),
+    \label{eq:phase-demand}
+\end{equation}
+
+utilizzata dal minimo verde dinamico e, nei controller successivi, per
+classificare il regime di traffico.
+
+Una pressione negativa è ammessa: indica che le uscite sono più cariche degli
+ingressi. Se tutte le fasi valide hanno un punteggio finito, viene comunque
+scelta la migliore in senso relativo. Nel caso anti-spillback una fase può
+ricevere valore $-\infty$ e viene esclusa.
+
+Questa implementazione conserva la struttura locale upstream--downstream delle
+formulazioni decentralizzate del Max-Pressure
+\cite{varaiya2013maxpressure,wongpiromsarn2012distributed}.
+
+\subsection{Selezione della fase}
+
+Siano $S_\phi$ i punteggi, uguali alla pressione salvo bonus o penalità. La
+fase migliore cambia il semaforo soltanto se
+
+\begin{equation}
+    \phi^*\neq\phi_c
+    \quad\land\quad
+    S_{\phi^*}>S_{\phi_c}+M,
+    \label{eq:switch-condition}
+\end{equation}
+
+in cui $\phi_c$ è la fase corrente e $M$ il margine di switch. Nel controller
+base $M=0$. La disuguaglianza stretta evita cambi in caso di pareggio. Se la
+condizione è soddisfatta, il controller registra lo switch, imposta il target
+pendente e avvia la sequenza di transizione.
+
+\subsection{Vincoli di minimo e massimo verde}
+
+Il valore predefinito del minimo verde è 10 secondi. Prima di tale durata la
+fase non viene rivalutata. Il massimo verde è 120 secondi e opera come limite
+di sicurezza: se esiste una fase alternativa finita, il controller può forzare il cambio
+quando il limite è raggiunto. Minimo e massimo non determinano quindi un ciclo
+fisso, ma delimitano la frequenza delle decisioni adattive.
+
+È importante distinguere questo comportamento da un piano statico. Il fixed
+mantiene una durata prestabilita indipendentemente dalle code. Il Max-Pressure
+mantiene la fase almeno per il minimo, poi può conservarla o cambiarla in base
+ai punteggi osservati.
+
+\section{Macchina a stati del controller}
+
+Per ogni semaforo vengono mantenuti fase principale attiva, target pendente,
+tempo di permanenza in stati non principali, hold Nmin, tempo di svuotamento e
+prolungamento per plotone. Queste variabili rendono il controller una macchina
+a stati, non una funzione priva di memoria.
+
+\subsection{Fase attiva e target pendente}
+
+Nello stato ordinario il semaforo si trova in una fase principale. Il
+controller misura la rete e può restare oppure scegliere un target. Quando
+sceglie un target diverso, entra nello stato di transizione e non prende nuove
+decisioni di pressione fino al completamento della sequenza. In questo modo un
+punteggio che cambia durante il giallo non interrompe o inverte la manovra.
+
+Raggiunto il target, lo stato attivo viene aggiornato e i temporizzatori della
+nuova fase vengono inizializzati. I tempi di attesa delle fasi non servite sono
+mantenuti soltanto quando è abilitata la fairness.
+
+\subsection{Gestione di giallo e all-red}
+
+La durata persa nel lasciare una fase è calcolata sommando le durate delle fasi
+non principali che la seguono fino alla prossima fase principale:
+
+\begin{equation}
+    L_{\phi_c}=\sum_{k\in\mathcal{T}(\phi_c)}d_k,
+    \label{eq:lost-time}
+\end{equation}
+
+con $\mathcal{T}(\phi_c)$ insieme degli stati di transizione e $d_k$ pari alla
+relativa durata. Il valore viene riutilizzato sia dal margine lost-time-aware sia dal
+calcolo Nmin. Non viene quindi assunto un giallo uguale per tutti gli incroci.
+
+\subsection{Recupero dalle transizioni anomale}
+
+Due controlli evitano possibili stalli. Se esiste un target pendente e una fase di
+transizione termina, il controller avanza o si riallinea al target. Se invece
+non esiste un target ma il semaforo rimane in una fase non principale oltre la
+soglia di 20 secondi, viene ripristinata la prima fase principale valida. Il
+recupero non è una politica di traffico: è una protezione operativa contro
+stati incoerenti o logiche di rete non previste.
+
+\section{Lost-Time-Aware}
+
+La variante lost-time-aware richiede che il guadagno di punteggio superi una
+stima del costo della transizione. Il margine complessivo è
+
+\begin{equation}
+    M=\varepsilon_{abs}+\varepsilon_{rel}|S_{\phi_c}|
+      +\gamma\,s\,L_{\phi_c},
+    \label{eq:lta-margin}
+\end{equation}
+
+in cui $\gamma$ è il guadagno lost-time, $s$ una portata di saturazione
+espressa in veicoli al secondo e $L_{\phi_c}$ il tempo perso. La variante finale
+Manhattan usa $\gamma=0{,}60$ e $s=0{,}50$. Il margine rende esplicito il costo
+del cambio di fase, problema affrontato anche nelle formulazioni Max-Pressure
+che considerano lo switching loss \cite{wang2022switching}.
+
+L'effetto atteso è ridurre switch marginali. Un valore eccessivo può tuttavia
+rendere il controller lento a reagire e prolungare fasi non più ottimali. Per
+questo l'efficacia non può essere dedotta dalla sola plausibilità della regola:
+deve essere misurata insieme al numero di switch e agli interventi del massimo
+verde.
+
+\section{Minimo verde dinamico Nmin}
+
+Nmin stima quanti veicoli sia opportuno servire prima di abbandonare una fase.
+Dato il costo di transizione dell'\cref{eq:lost-time}, calcola
+
+\begin{align}
+    N_{cost} &= \alpha\,s\,L_{\phi_c}, \\
+    N_{target} &= \max\{N_{floor},N_{cost},gD_{\phi_c}\},
+    \label{eq:nmin-target}
+\end{align}
+
+in cui $\alpha$ pesa il costo, $N_{floor}$ è un minimo di veicoli, $g$ il
+coefficiente dipendente dalla domanda e $D_{\phi_c}$ la domanda della fase. Se
+la domanda è positiva, $N_{target}$ viene limitato a non superarla. La durata
+di hold è
+
+\begin{equation}
+    H_{\phi_c}=\max\left\{G_{min}^{N},\frac{N_{target}}{s}\right\}.
+    \label{eq:nmin-hold}
+\end{equation}
+
+Se la fase si svuota prima del termine, un timer consente il rilascio anticipato
+invece di attendere inutilmente. La configurazione studiata usa
+$\alpha=0{,}80$, $N_{floor}=2$, $G_{min}^{N}=4$ secondi, $g=0{,}25$ e rilascio
+dopo un secondo di domanda nulla.
+
+Questa configurazione modifica due aspetti: abilita l'hold dinamico e riduce da
+10 a 4 secondi il minimo verde di base. Nell'interpretare i risultati occorre
+quindi evitare di attribuire automaticamente ogni guadagno alla formula Nmin.
+I contatori mostrano, infatti, che nel traffico basso l'hold dinamico non viene
+quasi mai attivato; il beneficio deriva soprattutto dalla maggiore rapidità di
+rivalutazione.
+
+\section{Fairness}
+
+Per ogni fase non servita che presenta domanda viene incrementato un tempo di
+attesa interno $w_\phi$. Quando la fase è attiva, o quando la sua domanda si
+annulla, il valore viene azzerato. Il bonus è
+
+\begin{equation}
+    B_\phi(w_\phi)=\mu\frac{w_\phi}{w_\phi+w_{1/2}},
+    \label{eq:fairness-bonus}
+\end{equation}
+
+ed è aggiunto alla pressione. $\mu$ è il bonus asintotico e $w_{1/2}$ il tempo
+al quale viene raggiunta metà del bonus massimo. La configurazione Manhattan
+usa $\mu=5$ e $w_{1/2}=20$ secondi.
+
+La funzione cresce rapidamente all'inizio e poi satura. Non garantisce un
+ordine rigido delle fasi, ma rende progressivamente più difficile ignorare un
+movimento con domanda persistente. Il contatore registra quante volte è stato
+applicato un bonus positivo e la somma complessiva dei bonus. La regola affronta
+così lo stesso compromesso fra throughput e fairness studiato nei controller
+basati sul ritardo \cite{wu2018fairness,liu2022delay}.
+
+\section{Penalità downstream}
+
+La pressione di base sottrae già la coda a valle. La variante downstream
+aggiunge una penalità continua basata sull'occupazione filtrata con media
+mobile esponenziale:
+
+\begin{align}
+    \bar{o}_j(t) &= \eta o_j(t)+(1-\eta)\bar{o}_j(t-1), \\
+    p'_{ij}(t) &= q_i(t)-q_j(t)-\beta\bar{o}_j(t).
+    \label{eq:downstream-penalty}
+\end{align}
+
+La campagna usa $\beta=0{,}4$ e $\eta=0{,}30$. Il filtro riduce la sensibilità
+a picchi di un solo passo. La penalità è morbida: una corsia occupata rende il
+movimento meno attraente, ma non lo esclude. Il rischio è penalizzare anche una
+normale occupazione in reti lontane dalla saturazione, introducendo un costo
+senza prevenire alcun blocco reale.
+
+\section{Anti-spillback}
+
+Il blocco rigido usa due stime della saturazione downstream. La scelta di
+considerare la capacità finita delle corsie segue il principio degli approcci
+capacity-aware e anti-spillback \cite{gregoire2015capacity,noaeen2021spillback}.
+La prima stima è l'occupazione filtrata $\bar{o}_j$; la seconda approssima il
+riempimento della capacità di stoccaggio:
+
+\begin{equation}
+    f_j=\min\left\{1,
+    \frac{q_j}{\max(1,\ell_j/7{,}5)}\right\},
+    \qquad z_j=\max\{\bar{o}_j,f_j\},
+    \label{eq:spillback-score}
+\end{equation}
+
+in cui $\ell_j$ è la lunghezza della corsia in metri e 7,5 metri è lo spazio
+medio in coda assunto per veicolo. Una corsia non bloccata entra nello stato di
+blocco quando $z_j\geq\theta_{on}$ e sono presenti almeno $h_{min}$ veicoli
+fermi; rimane bloccata finché $z_j\geq\theta_{off}$. Poiché
+$\theta_{off}<\theta_{on}$, la regola possiede isteresi.
+
+Nella configurazione \texttt{on90\_off80}, $\theta_{on}=0{,}90$,
+$\theta_{off}=0{,}80$ e $h_{min}=3$. Se anche un solo movimento di una fase
+conduce a una corsia bloccata, l'intera fase riceve pressione $-\infty$. È una
+scelta conservativa: protegge la rete dal trasferimento di congestione, ma può
+sottrarre servizio anche agli altri movimenti della stessa fase. I contatori
+di blocco, rilascio e passi bloccati servono a verificare se la protezione sia
+mai entrata in funzione.
+
+\section{Platoon extension}
+
+Per ogni corsia in ingresso alla fase attiva viene collocato un rivelatore virtuale
+a 8 metri dalla fine. Il controller registra gli istanti in cui i veicoli
+attraversano tale posizione e calcola la media degli ultimi quattro headway.
+Un plotone è riconosciuto se la media non supera la soglia configurata e
+l'ultimo passaggio non è più vecchio del tempo di gap-out.
+
+Quando il controller sta per rivalutare la fase, la presenza del plotone
+può prolungare il verde fino a un massimo aggiuntivo. La configurazione finale
+usa soglia e gap-out di 2,1 secondi e un massimo di 4 secondi. Un controllo
+downstream impedisce l'estensione solo quando sono contemporaneamente abilitate
+le misure di spillback o penalità downstream. Nello scenario standalone
+\texttt{mp\_platoon\_x4} tali moduli non sono attivi; di conseguenza il
+parametro di guardia dichiarato non modifica il comportamento. Questo dettaglio
+implementativo è rilevante per non sovrainterpretare il test.
+
+\section{Margini e stabilità dello switch}
+
+Oltre al termine lost-time, il controller supporta un margine assoluto e uno
+relativo. Con la sola componente relativa,
+
+\begin{equation}
+    M=\varepsilon_{rel}|S_{\phi_c}|.
+\end{equation}
+
+Lo scenario Manhattan \texttt{mp\_switch\_rel005} usa
+$\varepsilon_{rel}=0{,}05$. L'obiettivo è introdurre una banda morta: una fase
+alternativa deve migliorare il punteggio corrente di almeno il 5\%. Anche qui
+il vantaggio potenziale, meno oscillazioni, si contrappone al rischio di
+ritardare una decisione utile.
+
+\section{Contatori di attivazione}
+
+Il controller espone un dizionario di statistiche, successivamente aggregato
+nel CSV di ciascuna esecuzione.
+Per i test dei primi sei capitoli vengono utilizzati:
+
+\begin{itemize}
+    \item numero di switch decisi dal margine e numero di switch forzati dal
+    massimo verde;
+    \item passi in cui Nmin ha mantenuto la fase;
+    \item eventi di blocco, rilascio e passi con spillback attivo;
+    \item passi di estensione dovuti a un plotone;
+    \item numero e somma dei bonus di fairness positivi.
+\end{itemize}
+
+Queste misure non sono obiettivi da massimizzare. Un numero elevato di
+attivazioni può indicare che la regola affronta un fenomeno frequente, ma anche
+che interviene troppo aggressivamente. La loro funzione è spiegare le metriche
+di mobilità e verificare la coerenza tra configurazione e comportamento.
 
 \cleardoublepage
 \chapter*{Appendici}
