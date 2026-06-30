@@ -81,7 +81,7 @@
 % FIGURE, TABELLE, DIDASCALIE
 % =========================================================
 \usepackage{graphicx}
-\graphicspath{{img/}{figures/}}
+\graphicspath{{figures/}{img/}}
 
 \usepackage{float}
 \usepackage{subcaption}
@@ -314,11 +314,10 @@ osservato e può quindi assegnare il verde a direzioni poco richieste mentre si
 formano code su altri accessi. Questa tesi studia strategie di controllo
 adattivo basate sul principio Max-Pressure, nel quale ogni incrocio seleziona
 la fase da servire confrontando le code a monte e a valle dei movimenti
-consentiti. Il lavoro comprende la progettazione di una piattaforma
-sperimentale riproducibile basata su SUMO e TraCI, l'implementazione di un
-controller Max-Pressure e di sette estensioni specialistiche, e la costruzione
-di una pipeline di ablation capace di generare popolazioni, eseguire batch
-paralleli e produrre automaticamente metriche e report.
+consentiti. Il lavoro comprende una piattaforma sperimentale riproducibile
+basata su SUMO e TraCI, un controller Max-Pressure con sette estensioni
+specialistiche e una pipeline per analisi di ablazione, esecuzioni parallele e
+produzione automatica di metriche e report.
 
 La prima valutazione completa riguarda una rete sintetica Manhattan \(8
 \times 8\), tre livelli di domanda e cinque seed. I 135 casi sperimentali sono
@@ -329,9 +328,19 @@ statico nativo, il miglior controller riduce il tempo medio di attesa del
 l'aggiunta di una regola specialistica non produce necessariamente un
 beneficio: alcune estensioni migliorano soltanto in specifici regimi, altre
 rimangono inattive oppure introducono un costo superiore al vantaggio
-ottenuto. Questa osservazione motiva la successiva applicazione alla rete
-reale di Bologna e lo studio di controller capaci di adattare la propria
-modalità operativa al regime locale di traffico.
+ottenuto.
+
+La seconda valutazione riguarda la rete reale di Bologna, con tre
+distribuzioni della domanda, tre livelli di traffico e tre seed. In questo
+scenario il Max-Pressure puro risulta sempre peggiore del programma semaforico
+nativo. Sono stati quindi sviluppati due controller ibridi che conservano il
+piano esistente nei regimi appropriati e attivano Max-Pressure in base al
+carico osservato. Nelle 270 simulazioni considerate, completate senza censura,
+è sempre uno dei due ibridi a ottenere la minore attesa media:
+\texttt{mp\_super} prevale in cinque gruppi e \texttt{mp\_program0} in
+quattro. Il risultato mostra che, su una rete reale, l'adattività può essere
+più efficace quando integra il piano nativo anziché sostituirlo
+continuamente.
 
 \chapter*{Parole chiave}
 \addcontentsline{toc}{chapter}{Parole chiave}
@@ -443,6 +452,10 @@ Il lavoro è partito da una base software composta dal collegamento con SUMO, da
 un runner, da un generatore di popolazioni e da un controller fisso, che sono
 stati poi integrati ed estesi con:
 
+Nel seguito, con \emph{campagna sperimentale} si intende un insieme organizzato
+di simulazioni eseguite con una stessa configurazione generale, variando in modo
+controllato mappa, livello di domanda, seed e scenario di controllo.
+
 \begin{itemize}
     \item un'implementazione completa del Max-Pressure, comprensiva di macchina
     a stati per preservare giallo e all-red;
@@ -452,7 +465,7 @@ stati poi integrati ed estesi con:
     profili di guida;
     \item una pipeline batch con preflight, cache delle popolazioni,
     parallelismo, tracciamento del progresso e report automatici;
-    \item il calcolo esplicito di throughput e censura a partire dai file
+    \item il calcolo esplicito di viaggi completati e censura a partire dai file
     \texttt{tripinfo};
     \item una campagna finale su Manhattan $8\times8$ composta da 135
     simulazioni valide, tre livelli di domanda e cinque seed;
@@ -510,7 +523,7 @@ assegnato anche in assenza di domanda e non può essere trasferito
 immediatamente a una coda inattesa. Il confronto sperimentale deve tuttavia
 essere formulato con cautela: battere un particolare piano statico non equivale
 a dimostrare la superiorità rispetto a ogni possibile piano ottimizzato. Nella
-campagna Manhattan il riferimento è il \emph{program0} nativo della mappa, non
+campagna Manhattan il riferimento è il \texttt{program0} nativo della mappa, non
 un piano coordinato ottimizzato a posteriori sui casi di test.
 
 \subsection{Controllo attuato e adattivo}
@@ -793,16 +806,17 @@ percorsi di output.
 
 \section{Requisiti non funzionali}
 
-Oltre ai valori numerici, sono rilevanti riproducibilità, modularità e
-osservabilità. Questi requisiti hanno guidato scelte quali la serializzazione
+Oltre ai valori numerici, sono rilevanti \emph{riproducibilità},
+\emph{modularità} e \emph{osservabilità}. Questi requisiti hanno guidato
+scelte quali la serializzazione
 delle popolazioni, l'uso di configurazioni risolte e l'introduzione di contatori
 per le regole specialistiche.
 
 \subsection{Riproducibilità}
 
 Due controller devono essere confrontati sugli stessi veicoli, con le stesse
-route, gli stessi istanti di partenza e le stesse caratteristiche di guida. Per ogni coppia
-mappa--domanda--seed viene quindi generato un unico file di popolazione,
+route, gli stessi istanti di partenza e le stesse caratteristiche di guida. Per
+ogni terna mappa--domanda--seed viene quindi generato un unico file di popolazione,
 riutilizzato da tutti gli scenari. Il seed compare sia nel nome sia nel
 contenuto del file. La directory di una campagna conserva inoltre la
 configurazione effettivamente risolta, evitando che un valore predefinito
@@ -810,8 +824,8 @@ modificato in seguito renda ambiguo un risultato precedente.
 
 La riproducibilità non implica che seed diversi producano gli stessi valori;
 serve piuttosto a rendere controllata la variabilità. Nella valutazione finale
-su Manhattan ogni scenario viene eseguito sui medesimi cinque seed, consentendo
-confronti appaiati.
+su Manhattan ogni scenario viene eseguito sui medesimi cinque seed e quindi
+sullo stesso insieme di popolazioni.
 
 \subsection{Modularità}
 
@@ -842,11 +856,18 @@ eseguita in background.
 
 \section{Architettura generale}
 
-La \cref{fig:architettura} mostra i componenti principali. La pipeline
-sperimentale genera la matrice dei casi e usa il runner per avviare processi SUMO
-indipendenti. Il runner carica la popolazione, collega il controller mediante
-TraCI e inoltra le osservazioni al modulo delle metriche. Al termine, gli
-output dei casi vengono aggregati in report di campagna.
+La \cref{fig:architettura} mostra i componenti principali della piattaforma
+sperimentale. Lo schema non elenca tutti i file sorgente, ma rappresenta i
+passaggi logici di una campagna: preparazione dei casi, costruzione della
+popolazione, esecuzione delle simulazioni, controllo semaforico, raccolta degli
+output e aggregazione finale.
+
+Nel codice, la pipeline sperimentale è realizzata da
+\texttt{run\_ablation.py}. Questo script risolve la combinazione di mappe,
+domande, seed e scenari, genera o recupera la popolazione da usare e avvia un
+runner per ogni caso. \texttt{generate\_population.py} non è mostrato come
+blocco separato nella figura, perché il suo risultato è il blocco
+\emph{Popolazione YAML}: l'input di traffico che viene poi passato al runner.
 
 \begin{figure}[htbp]
     \centering
@@ -864,7 +885,7 @@ output dei casi vengono aggregati in report di campagna.
         \node[box, right=of ablation] (runner) {Runner della simulazione\\\texttt{runner.py}};
         \node[box, right=of runner] (sumo) {SUMO\\dinamica microscopica};
         \node[data, below=of ablation] (population) {Popolazione YAML};
-        \node[box, below=of runner] (controller) {Controller\\fixed o Max-Pressure};
+        \node[box, below=of runner] (controller) {Controller\\\texttt{fixed} o Max-Pressure};
         \node[box, below=of sumo] (traci) {TraCI\\osservazioni e comandi};
         \node[data, below=18mm of controller] (outputs) {CSV, tripinfo,\\contatori e log};
         \node[box, left=of outputs] (reports) {Aggregazione e report};
@@ -886,6 +907,12 @@ output dei casi vengono aggregati in report di campagna.
     \label{fig:architettura}
 \end{figure}
 
+La figura va quindi letta da sinistra verso destra. La pipeline prepara gli
+input e coordina l'esecuzione; il runner avvia SUMO, carica la popolazione e
+collega il controller mediante TraCI. Gli output del singolo caso vengono poi
+raccolti e, al termine della campagna, la pipeline li combina nei report
+finali.
+
 \subsection{Runner delle simulazioni}
 
 \texttt{runner.py} è il punto di ingresso per un singolo caso. Il modulo
@@ -895,17 +922,23 @@ finché \texttt{getMinExpectedNumber()} segnala veicoli presenti o ancora attesi
 oppure finché viene raggiunto il limite opzionale di passi.
 
 A ogni iterazione il runner avanza SUMO e invoca l'aggiornamento del
-controller. Alla chiusura legge il file \texttt{tripinfo}, combina le
-informazioni di viaggio con i contatori online e scrive i risultati del caso.
-Questa sequenza centralizza il ciclo di vita della simulazione e garantisce che
-fixed e Max-Pressure differiscano soltanto nella politica semaforica.
+controller. SUMO rimane responsabile della dinamica microscopica, quindi
+aggiorna veicoli, corsie, code e completamento dei viaggi; TraCI è invece il
+canale attraverso cui il codice Python osserva lo stato della simulazione e
+invia comandi ai semafori. Alla chiusura il runner legge il file
+\texttt{tripinfo}, combina le informazioni di viaggio con i contatori online e
+scrive i risultati del caso. Questa sequenza centralizza il ciclo di vita della
+simulazione e garantisce che \texttt{fixed} e Max-Pressure differiscano soltanto nella
+politica semaforica.
 
 \subsection{Generazione delle popolazioni}
 
-\texttt{generate\_population.py} seleziona route valide dalla mappa e genera
-veicoli con istante di partenza, tipo e parametri di guida. Il risultato è un
-file YAML leggibile e riutilizzabile. \texttt{src/population.py} traduce poi
-questa descrizione in comandi TraCI durante l'esecuzione.
+La popolazione YAML è l'input di traffico di una simulazione. Contiene i veicoli
+da inserire nella rete, le route assegnate, gli istanti di partenza e i
+parametri di guida. \texttt{generate\_population.py} costruisce questo file
+selezionando route valide dalla mappa e generando veicoli secondo il livello di
+domanda e il seed scelti. Durante l'esecuzione, \texttt{src/population.py}
+traduce poi la popolazione YAML in comandi TraCI.
 
 La separazione tra generazione e simulazione impedisce che due scenari
 consumino in ordine diverso lo stesso generatore casuale. Il traffico non viene
@@ -914,7 +947,7 @@ confronto.
 
 \subsection{Controller semaforici}
 
-La classe base definisce il contratto comune. Il controller fixed può lasciare
+La classe base definisce il contratto comune. Il controller \texttt{fixed} può lasciare
 in esecuzione un programma esistente o modificarne selettivamente il verde. Il
 controller Max-Pressure costruisce, per ogni semaforo, una rappresentazione di
 fasi principali, movimenti, corsie e stato temporale. Tutti i semafori della
@@ -929,9 +962,13 @@ condividono la medesima gestione delle transizioni.
 \subsection{Raccolta e aggregazione delle metriche}
 
 Le metriche online descrivono lo stato e le decisioni del controller; quelle
-post-simulazione provengono dai viaggi completati. Per ciascun caso vengono
-salvati un CSV per veicolo, un riepilogo e i log. La pipeline combina poi i
-casi in:
+post-simulazione provengono dai viaggi completati. Il blocco
+\emph{CSV, tripinfo, contatori e log} della figura raggruppa output con ruoli
+diversi: \texttt{tripinfo} è prodotto da SUMO e viene usato per derivare le
+metriche sui viaggi; i CSV e i riepiloghi conservano i valori elaborati dalla
+piattaforma; i contatori descrivono eventi interni del controller; i log aiutano
+a diagnosticare anomalie o fallimenti. Terminati i casi, la pipeline combina
+poi i risultati in:
 
 \begin{itemize}
     \item \texttt{run\_results.csv}, una riga per simulazione;
@@ -1003,7 +1040,7 @@ di risoluzione dei percorsi e l'analisi dinamica dei programmi evitano di
 codificare nel controller gli identificativi di una singola rete.
 
 Non tutte le strategie sono tuttavia trasferibili senza adattamento. Un
-programma statico specifico della mappa, come il program0 di Bologna, non ha un
+programma statico specifico della mappa, come \texttt{program0} di Bologna, non ha un
 equivalente semantico universale. Per questo i capitoli sperimentali separano
 la valutazione generale su Manhattan dagli sviluppi specifici della rete
 reale.
@@ -1025,11 +1062,19 @@ struttura contenente numero e durata delle fasi, fasi principali, movimenti per
 fase, tempi di attesa interni e stato della transizione. La costruzione non
 presuppone identificativi specifici della mappa.
 
-Quando più logiche sono disponibili viene scelta quella con il maggior numero
-di fasi principali, preferendo il programma già attivo se appartiene ai
-candidati migliori. Questa regola evita di imporre universalmente un
-identificativo, ad esempio \texttt{1}, che su una mappa reale potrebbe avere un
-significato differente.
+In SUMO ogni semaforo della mappa può avere più programmi semaforici. Un
+programma non è quindi globale per l'intera rete, ma descrive il piano di uno
+specifico incrocio: fasi, durate e transizioni. Ogni programma viene identificato
+da un valore come \texttt{0}, \texttt{1} o \texttt{2}. Questi identificativi sono
+locali alla mappa e al semaforo: il programma \texttt{0} può indicare il piano
+nativo di un incrocio, mentre in un'altra rete o in un altro semaforo gli stessi
+numeri possono riferirsi a logiche diverse.
+
+Per questo il controller non sceglie staticamente, ad esempio, sempre il
+programma \texttt{1}. Nel Max-Pressure generale seleziona il programma con il
+maggior numero di fasi principali utilizzabili, preferendo quello già attivo in
+caso di parità. Le durate vengono lette e conservate, ma non sono il criterio
+con cui si sceglie il programma.
 
 \subsection{Identificazione delle fasi principali}
 
@@ -1139,7 +1184,7 @@ di sicurezza: se esiste una fase alternativa finita, il controller può forzare 
 quando il limite è raggiunto. Minimo e massimo non determinano quindi un ciclo
 fisso, ma delimitano la frequenza delle decisioni adattive.
 
-È importante distinguere questo comportamento da un piano statico. Il fixed
+È importante distinguere questo comportamento da un piano statico. Il controller \texttt{fixed}
 mantiene una durata prestabilita indipendentemente dalle code. Il Max-Pressure
 mantiene la fase almeno per il minimo, poi può conservarla o cambiarla in base
 ai punteggi osservati.
@@ -1363,15 +1408,542 @@ attivazioni può indicare che la regola affronta un fenomeno frequente, ma anche
 che interviene troppo aggressivamente. La loro funzione è spiegare le metriche
 di mobilità e verificare la coerenza tra configurazione e comportamento.
 
-\cleardoublepage
-\chapter*{Appendici}
-\addtocontents{toc}{\protect\contentsline {chapter}{Appendici}{}{}}
+\chapter{Metodologia e piattaforma sperimentale}
+\label{chap:metodologia}
 
-% Appendici lasciate intenzionalmente vuote in questa versione parziale.
+La qualità di una politica semaforica non può essere stabilita da una sola
+simulazione. Il protocollo deve controllare domanda, seed, durata e completezza
+dei viaggi, oltre a rendere confrontabili gli output. Il capitolo definisce la
+pipeline sperimentale, i modelli di domanda, le metriche e le minacce alla
+validità. La configurazione specifica di Manhattan è presentata nel
+\cref{chap:manhattan}.
 
-\cleardoublepage
-\chapter*{Riferimenti bibliografici}
-\addtocontents{toc}{\protect\contentsline {chapter}{Riferimenti bibliografici}{}{}}
-\printbibliography[heading=none]
+\section{Obiettivi della valutazione}
+
+La valutazione risponde a quattro domande:
+
+\begin{enumerate}
+    \item il Max-Pressure riduce attesa e tempo di viaggio rispetto al programma
+    statico nativo?
+    \item il vantaggio rimane osservabile al crescere della domanda?
+    \item quali estensioni migliorano il controller base e in quale regime?
+    \item il comportamento interno conferma che la regola specialistica si è
+    effettivamente attivata?
+\end{enumerate}
+
+Per rispondere, si adotta un'analisi di ablazione (\emph{ablation}). Con questo
+termine si intende un confronto in cui si parte da un modello di riferimento e
+si aggiunge, oppure si isola, una sola modifica alla volta. In questo lavoro il
+riferimento interno è \texttt{mp\_base}: ogni scenario Max-Pressure abilita una
+sola famiglia di estensioni rispetto a esso. In questo modo, se una variante
+migliora o peggiora, il cambiamento può essere ricondotto con maggiore chiarezza
+alla regola aggiunta.
+
+Le popolazioni sono identiche tra controller e cambiano soltanto tra seed o
+livello di domanda. Il piano fisso basato su \texttt{program0} serve a
+confrontare il controllo adattivo con un semaforo non adattivo già presente
+nella mappa, mentre \texttt{mp\_base} serve a capire quanto valore aggiungano le
+singole estensioni Max-Pressure.
+
+\section{Pipeline sperimentale}
+
+\texttt{utils/run\_ablation.py} automatizza la campagna. A partire da insiemi di mappe,
+domande, distribuzioni, seed e scenari, costruisce tutti i casi, prepara gli
+input, esegue i processi e aggrega gli output. Questa automazione è stata
+necessaria perché comandi manuali lunghi avevano prodotto, nelle prime prove,
+errori difficili da diagnosticare e risultati non sempre omogenei.
+
+\subsection{Generazione dei casi sperimentali}
+
+Il numero totale di casi è
+
+\begin{equation}
+    N_{case}=N_{mappe}\,N_{set}\,N_{domande}\,N_{seed}\,N_{scenari}.
+    \label{eq:case-count}
+\end{equation}
+
+Il termine $N_{set}$ indica eventuali varianti nella generazione della
+popolazione; quando non sono previste, vale 1.
+
+Prima dell'avvio, la pipeline risolve i nomi delle mappe e degli scenari, calcola
+i preset di domanda effettivi e scrive la configurazione. Per ciascuna
+combinazione di mappa, set, domanda e seed genera una sola popolazione. Tutti i
+controller riferiti a quella combinazione ricevono lo stesso file.
+
+Gli scenari non vengono definiti manualmente a ogni lancio, ma sono raccolti in
+gruppi predefiniti, chiamati \emph{scenario pack}. Ogni scenario del pack
+associa un nome leggibile ai flag effettivi passati al runner; in questo modo,
+leggendo i risultati, è possibile risalire alla configurazione usata senza
+ricostruirla a posteriori.
+
+\subsection{Organizzazione delle campagne}
+
+Ogni campagna riceve un identificativo del tipo
+\texttt{run\_NNNN\_AAAAMMGG\_hhmmss}. La directory contiene popolazioni,
+risultati aggregati e una sottodirectory per ciascun caso. Il file di progresso
+riporta il totale pianificato e il conteggio di successi e fallimenti.
+
+Questa organizzazione preserva la provenienza dei risultati e consente di
+confrontare campagne successive senza mescolarne i file. I report finali usati
+nel \cref{chap:manhattan} provengono interamente da una sola campagna completa.
+
+\subsection{Report automatici}
+
+Per ogni gruppo mappa--set--domanda--scenario il report aggrega le metriche sui
+seed disponibili. Se $x_s$ è il valore di una metrica nel seed $s$, vengono
+calcolate la media e la deviazione standard campionaria:
+
+\begin{align}
+    \bar{x} &= \frac{1}{n}\sum_{s=1}^{n}x_s, \\
+    s_x &= \sqrt{\frac{1}{n-1}\sum_{s=1}^{n}(x_s-\bar{x})^2}.
+    \label{eq:mean-std}
+\end{align}
+
+La deviazione standard è detta campionaria perché i seed rappresentano solo un
+campione delle possibili popolazioni generate. Il report calcola poi, per ogni
+scenario, la differenza percentuale rispetto alla baseline $b$:
+
+\begin{equation}
+    \Delta_x=100\frac{\bar{x}-\bar{x}_b}{\bar{x}_b}.
+    \label{eq:relative-delta}
+\end{equation}
+
+Per attesa e tempo di viaggio un valore negativo indica un miglioramento. Le
+classifiche usano come criterio primario il tempo medio di attesa, ma la
+conclusione viene controllata sulle altre metriche e sulla censura.
+
+\section{Generazione della domanda di traffico}
+
+Una popolazione contiene identificativo, route, istante di partenza e tipo per
+ogni veicolo. La finestra di generazione è distinta dalla durata totale della
+simulazione: dopo l'ultimo veicolo inserito, la simulazione continua finché i
+veicoli in rete terminano il viaggio, salvo un limite esplicito.
+
+I tipi sono estratti con probabilità 75\% autovetture, 10\% veicoli per
+consegne, 10\% motocicli, 3\% camion e 2\% autobus. L'eterogeneità influenza
+lunghezza, accelerazione, distanza minima e dinamica di partenza, rendendo la
+popolazione meno artificiale di un insieme composto da sole autovetture.
+
+\subsection{Livelli low, medium e high}
+
+I livelli \texttt{low}, \texttt{medium} e \texttt{high} indicano intensità
+relative, non valori universali. La pipeline usa valori calibrati per le mappe
+note; altrimenti stima \texttt{medium} dal numero di route e ricava
+\texttt{low} e \texttt{high} come 60\% e 140\%. Per reti con oltre 650 route
+si ottengono 2400, 4000 e 5600 veicoli, con partenze in $[0,3600]$ secondi.
+
+Questa calibrazione rende i livelli proporzionati alla varietà dei percorsi
+della mappa. Non garantisce però che ``high'' produca saturazione o spillback:
+la gravità effettiva dipende anche da capacità, lunghezza delle route e
+concentrazione spaziale. Nel capitolo dei risultati tale distinzione risulta
+essenziale.
+
+\subsection{Seed e riproducibilità}
+
+Un unico oggetto pseudo-casuale, inizializzato dal seed, determina partenze,
+route e tipi. La popolazione viene poi ordinata per istante di partenza e
+serializzata. Nella campagna Manhattan si usano i seed da 1 a 5. Poiché ogni
+file è condiviso da tutti gli scenari, le differenze tra controller non
+dipendono da un diverso campione di veicoli.
+
+\section{Profilo di guida human-light}
+
+Il profilo \texttt{human\_light} riduce l'idealizzazione del comportamento
+senza introdurre una taratura aggressiva. La velocità iniziale dei veicoli non
+è sempre quella massima, ma viene scelta in modo più realistico da SUMO. Per
+ciascun tipo vengono specificati tempo di reazione $\tau$, imperfezione di
+guida $\sigma$, intervallo di azione, gap alle precedenze e ritardo di
+partenza.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Parametri principali del profilo \texttt{human\_light}.}
+    \label{tab:human-light}
+    \begin{tabular}{lccccc}
+        \toprule
+        Tipo & $\tau$ [s] & $\sigma$ & Azione [s] & Gap [s] & Startup [s] \\
+        \midrule
+        Autovettura & 1,45 & 0,55 & 1,0 & 1,40 & 0,80 \\
+        Consegna    & 1,55 & 0,50 & 1,0 & 1,45 & 1,00 \\
+        Camion      & 1,75 & 0,45 & 1,0 & 1,60 & 1,20 \\
+        Autobus     & 1,75 & 0,45 & 1,0 & 1,60 & 1,20 \\
+        Motociclo   & 1,25 & 0,65 & 1,0 & 1,25 & 0,45 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Il profilo è identico per tutti i controller. Non cerca di riprodurre una
+specifica popolazione cittadina, ma evita partenze istantanee e reazioni
+perfette che potrebbero favorire irrealisticamente switch molto frequenti.
+
+\section{Controller di confronto}
+
+\subsection{\texttt{fixed\_program0}}
+
+Lo scenario \texttt{fixed\_program0} forza \texttt{program0}, cioè il programma
+con \texttt{programID=0}. SUMO esegue poi ciclicamente le durate definite nella
+mappa. Il controller non osserva code e non modifica il piano: per questo è la
+baseline principale di Manhattan, cioè il funzionamento semaforico nativo senza
+controllo adattivo.
+
+\subsection{\texttt{fixed\_tuned}}
+
+La piattaforma supporta anche \texttt{fixed\_tuned}, che forza a 30 secondi le
+fasi principali di \texttt{program0} mantenendo le transizioni. Questa baseline è
+stata utile nelle campagne esplorative su Bologna, ma non viene inclusa nella
+campagna Manhattan finale: il suo parametro non deriva da un'ottimizzazione
+specifica della griglia e avrebbe aggiunto un confronto non necessario al
+primo studio di ablazione.
+
+\section{Metriche}
+
+\subsection{Tempo di attesa}
+
+Per ciascun veicolo SUMO fornisce il tempo totale trascorso in attesa. La media
+è l'indicatore primario perché misura direttamente la conseguenza delle scelte
+semaforiche. Viene riportato anche il 95-esimo percentile, utile a verificare
+che una buona media non nasconda una coda di utenti fortemente penalizzati.
+
+\subsection{Tempo di viaggio e time loss}
+
+Il tempo di viaggio è la differenza tra arrivo e partenza. La \emph{time loss}
+è la perdita rispetto a una percorrenza ideale secondo il modello SUMO e
+comprende rallentamenti, arresti e interazioni. Le due metriche non sono
+intercambiabili: route più lunghe aumentano il viaggio anche a parità di
+controllo, mentre il time loss isola meglio l'inefficienza incontrata.
+
+\subsection{Velocità media}
+
+Per ogni viaggio completato la velocità media è il rapporto tra distanza e
+durata; il report aggrega poi i veicoli. Un controller efficace dovrebbe
+produrre, a parità di route, velocità maggiori coerentemente con minori attese
+e perdite di tempo.
+
+\subsection{Viaggi completati e tasso di completamento}
+
+Il numero di viaggi completati misura quanti veicoli raggiungono la
+destinazione. Rapportato alla popolazione pianificata fornisce il tasso di
+completamento; rapportato alla durata osservata può invece contribuire a una
+misura di throughput. Quando la simulazione prosegue fino allo svuotamento,
+tutti gli scenari dovrebbero completare la stessa popolazione e il solo
+conteggio finale non distingue le prestazioni. In presenza di un limite
+temporale, il numero di arrivi diventa invece essenziale: un controller che
+lascia veicoli bloccati non può essere valutato soltanto sui pochi arrivati.
+
+\subsection{Censura}
+
+Siano $N_p$ i viaggi pianificati e $N_c$ quelli completati. La censura è
+
+\begin{equation}
+    C=\frac{N_p-N_c}{N_p}.
+    \label{eq:censoring}
+\end{equation}
+
+Una censura positiva indica che le metriche di viaggio sono calcolate su un
+sottoinsieme. Non equivale automaticamente a un errore, ma rende il confronto
+più delicato e deve essere riportata. La campagna Manhattan usa
+\texttt{max\_steps=0}, cioè nessun cutoff imposto dalla pipeline, e termina con
+$C=0$ in tutti i 135 casi.
+
+\section{Criteri di confronto}
+
+Il criterio primario è la minore attesa media, purché censura e numero di
+viaggi completati siano comparabili. Il confronto con il piano statico usa
+\texttt{fixed\_program0}; il confronto tra estensioni Max-Pressure usa invece
+\texttt{mp\_base}. Si controllano poi tempo di viaggio, time loss, 95-esimo
+percentile dell'attesa e velocità. Quando il vantaggio è piccolo o cambia tra
+seed, il risultato viene interpretato come vittoria aggregata, non come
+superiorità sostanziale.
+
+Le attivazioni interne vengono usate come indizio causale debole ma utile. Ad
+esempio, risultati e contatori identici tra spillback e \texttt{mp\_base} indicano che la
+soglia non è stata raggiunta. Non si conclude che lo spillback sia inutile in
+generale; si conclude che la campagna non ha testato il regime per cui è stato
+progettato.
+
+\chapter{Valutazione su Manhattan 8x8}
+\label{chap:manhattan}
+
+La rete Manhattan costituisce il primo banco di prova completo perché riduce
+le peculiarità topologiche e consente di osservare il comportamento dei
+controller in una griglia ripetibile. Il capitolo presenta configurazione,
+risultati e contatori della campagna finale. L'obiettivo non è scegliere un unico
+parametro universale, ma capire quali meccanismi producano un beneficio prima
+di passare alla rete reale.
+
+\section{Motivazione dello scenario sintetico}
+
+Una rete reale combina contemporaneamente segmenti corti, svolte, incroci con
+fasi diverse e domanda spazialmente non uniforme. Se una variante peggiora,
+può essere difficile stabilire quale caratteristica abbia causato il risultato.
+Manhattan $8\times8$ offre invece incroci quasi omogenei, elevata
+semaforizzazione e molte route. È quindi adatta a un'analisi di ablazione
+controllata.
+
+La regolarità non rende il test banale. Sessanta semafori prendono decisioni
+locali e le code si propagano attraverso la griglia. Il piano fisso, inoltre,
+non usa offset coordinati: tutti i programmi partono con offset zero. La
+campagna misura dunque quanto l'adattamento locale riesca a sfruttare una
+domanda diffusa rispetto alla ripetizione dello stesso ciclo.
+
+\section{Topologia della rete}
+
+La mappa \texttt{manhattan8x8\_100pc} contiene 64 giunzioni non interne, delle
+quali 60 semaforizzate e quattro angoli regolati a priorità. I 224 archi non
+interni hanno complessivamente 448 corsie, due per arco. Le lunghezze delle
+corsie sono comprese tra 139,2 e 143,2 metri, con media circa 139,5 metri. Il
+file delle route contiene 800 percorsi, da 1 a 15 archi e con lunghezza media
+pari a 7,276 archi.
+
+La \cref{fig:manhattan-sumo} mostra la rete in SUMO e un dettaglio di
+intersezione. La struttura regolare permette di isolare l'effetto della logica
+semaforica: ogni incrocio è simile agli altri e le differenze di prestazione
+dipendono soprattutto dal controller, non da particolarità geometriche locali.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[t]{0.47\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{sumo_manhattan_overview.png}
+        \caption{Vista complessiva della griglia.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.47\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{sumo_manhattan_intersection.png}
+        \caption{Dettaglio di un incrocio semaforizzato.}
+    \end{subfigure}
+    \caption{Scenario Manhattan $8\times8$ visualizzato in SUMO.}
+    \label{fig:manhattan-sumo}
+\end{figure}
+
+Ogni semaforo possiede due logiche. \texttt{program0}, usato da
+\texttt{fixed\_program0}, segue un ciclo statico:
+\(42 + 3 + 3 + 42 + 3 + 3 = 96\) secondi. La seconda logica mantiene le stesse
+transizioni, ma lascia il cambio fase al controller Max-Pressure. I 30 secondi
+di verde principale al posto dei 42 riguardano solo \texttt{fixed\_tuned}.
+
+\section{Configurazione sperimentale}
+
+La campagna finale è identificata da
+\texttt{run\_0023\_20260612\_131724}\footnote{I risultati completi della run
+sono disponibili nel repository in
+\path{logs/ablation/runs/run_0023_20260612_131724}: in particolare
+\path{table.txt}, \path{summary_by_group.csv}, \path{summary_vs_base.csv} e
+\path{run_results.csv}.}. Comprende una mappa, una distribuzione
+uniforme, tre domande, cinque seed e nove scenari:
+
+\begin{equation}
+    1\times1\times3\times5\times9=135\text{ simulazioni}.
+\end{equation}
+
+Le partenze sono distribuite uniformemente nei primi 3600 secondi. Low contiene
+2400 veicoli, medium 4000 e high 5600. Non è imposto un numero massimo di passi:
+ciascun caso prosegue fino a esaurimento. Tutti i casi sono terminati con
+successo; in ciascuno il numero di viaggi completati coincide con quello
+pianificato e la censura è zero. Non sono stati rilevati nei log avvisi di
+collisione, teletrasporto o frenata d'emergenza.
+
+La \cref{tab:manhattan-scenarios} riassume gli scenari. I valori non sono tutte
+le combinazioni provate durante lo sviluppo, ma una configurazione definitiva
+per ogni famiglia.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Scenari della campagna Manhattan.}
+    \label{tab:manhattan-scenarios}
+    \begin{tabularx}{\textwidth}{lX}
+        \toprule
+        Scenario & Configurazione caratterizzante \\
+        \midrule
+        \texttt{fixed\_program0} & Programma statico \texttt{program0} della mappa \\
+        \texttt{mp\_base} & Minimo 10 s, massimo 120 s, margine nullo \\
+        \texttt{mp\_lta\_g060\_sf050} & $\gamma=0{,}60$, $s=0{,}50$ veicoli/s \\
+        \texttt{mp\_nmin\_a080\_f2} & $\alpha=0{,}80$, floor 2, minimo 4 s, $g=0{,}25$ \\
+        \texttt{mp\_downstream\_b04} & $\beta=0{,}4$, EMA $\eta=0{,}30$ \\
+        \texttt{mp\_spillback\_on90\_off80} & Soglie 0,90/0,80, almeno 3 veicoli fermi \\
+        \texttt{mp\_fair\_mu5\_w20} & $\mu=5$, $w_{1/2}=20$ s \\
+        \texttt{mp\_platoon\_x4} & Headway e gap 2,1 s, estensione massima 4 s \\
+        \texttt{mp\_switch\_rel005} & Margine relativo 5\% \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\section{Confronto tra Max-Pressure e controllo fisso}
+
+La campagna Manhattan conferma il risultato più netto della tesi: tutte le
+varianti Max-Pressure riducono l'attesa rispetto al programma fisso. Il
+\texttt{mp\_base} riduce l'attesa del 59,46\%, 55,93\% e 52,66\% nei tre
+livelli; il miglior specialista raggiunge 64,26\%, 60,09\% e 53,05\%. La
+\cref{fig:manhattan-reduction} riassume il confronto senza riportare nel testo
+tutte le combinazioni numeriche generate dalla pipeline.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{tikzpicture}
+    \begin{axis}[
+        ybar,
+        width=0.90\textwidth,
+        height=7.0cm,
+        symbolic x coords={Low,Medium,High},
+        xtick=data,
+        ymin=0,
+        ymax=70,
+        ylabel={Riduzione attesa rispetto a \texttt{fixed\_program0} [\%]},
+        xlabel={Livello di domanda},
+        bar width=12pt,
+        enlarge x limits=0.25,
+        grid=major,
+        legend style={at={(0.5,-0.20)},anchor=north,legend columns=2},
+        nodes near coords,
+        every node near coord/.append style={font=\scriptsize}
+    ]
+        \addplot coordinates {(Low,59.46) (Medium,55.93) (High,52.66)};
+        \addlegendentry{\texttt{mp\_base}}
+        \addplot coordinates {(Low,64.26) (Medium,60.09) (High,53.05)};
+        \addlegendentry{Migliore MP}
+    \end{axis}
+    \end{tikzpicture}
+    \caption{Riduzione percentuale del tempo medio di attesa su Manhattan.}
+    \label{fig:manhattan-reduction}
+\end{figure}
+
+Lo scenario migliore è \texttt{mp\_nmin\_a080\_f2} in low e medium, mentre in
+high è \texttt{mp\_fair\_mu5\_w20}. Il valore assoluto dell'attesa passa da
+65,85 a 23,54 secondi in low, da 66,89 a 26,70 in medium e da 67,75 a 31,81 in
+high. La censura è nulla in tutti i casi, quindi il confronto non dipende da
+viaggi incompleti.
+
+Anche i percentili alti confermano il miglioramento: il 95-esimo percentile
+scende da 137,22 a 48,00 secondi in low, da 138,80 a 54,20 in medium e da
+141,00 a 66,00 in high. Il risparmio medio rispetto al piano statico è ampio:
+42,31 secondi in low, 40,20 in medium e 35,94 in high.
+
+\section{Valutazione delle singole estensioni}
+
+Il confronto con \texttt{fixed\_program0} dimostra il valore del controllo
+adattivo nella griglia, ma non implica che ogni estensione migliori
+\texttt{mp\_base}. In Manhattan molte varianti restano molto vicine tra loro:
+questo non le rende inutili, ma indica che la domanda uniforme non evidenzia
+tutti i fenomeni per cui sono state progettate.
+
+\subsection{Effetto chiaro: Nmin}
+
+Nmin è l'estensione con il comportamento più distinguibile. Produce il miglior
+risultato in low e medium, con un risparmio su \texttt{mp\_base} di 3,16 e 2,78
+secondi. In high il vantaggio scende a 0,04 secondi, quindi è trascurabile
+rispetto alla variabilità tra seed.
+
+I passi di hold Nmin sono in media 0 in low, 2,4 in medium e 23,2 in high. Il
+guadagno a basso traffico non nasce quindi dall'hold dinamico, ma soprattutto
+dal minimo verde ridotto a 4 secondi. In high l'hold entra in funzione, ma il
+beneficio sull'attesa è minimo e il tempo di viaggio peggiora leggermente.
+
+\subsection{Varianti quasi equivalenti a \texttt{mp\_base}}
+
+Anti-spillback e margine relativo producono gli stessi valori di
+\texttt{mp\_base} fino alla precisione dei report. Nel primo caso nessuna corsia
+raggiunge contemporaneamente il punteggio 0,90 e almeno tre veicoli fermi; nel
+secondo caso il 5\% di banda morta non modifica le decisioni già prese dal
+controller.
+
+Anche platoon e fairness restano molto vicini a \texttt{mp\_base}. Platoon rileva
+arrivi compatti e aumenta i passi estesi al crescere della domanda, ma il
+vantaggio massimo sull'attesa è inferiore a 0,2 secondi. Fairness diventa
+nominalmente la migliore in high, ma con soli 0,26 secondi di margine su
+\texttt{mp\_base}. Queste differenze sono troppo piccole per parlare di una
+superiorità stabile.
+
+\subsection{Varianti penalizzate dalla domanda uniforme}
+
+LTA e penalità downstream peggiorano rispetto a \texttt{mp\_base}. LTA introduce
+un margine prudenziale contro gli switch frequenti, ma nella griglia uniforme le
+pressioni sono abbastanza regolari e il costo della prudenza supera il beneficio.
+La penalità downstream, invece, non trova un vero regime di blocco a valle:
+reagisce a occupazioni normali e altera la scelta delle fasi senza prevenire uno
+spillback reale.
+
+Questa lettura delimita il significato della campagna Manhattan. Anche 5600
+veicoli con domanda uniforme sono sufficienti per confrontare Max-Pressure e
+piano fisso, ma non per valutare in modo completo estensioni pensate per code
+localizzate, corridoi dominanti, picchi temporali o saturazione a valle. Per
+questo la campagna permette di individuare i primi limiti dello scenario
+sperimentale Manhattan: il traffico è troppo omogeneo per mettere in crisi alcune
+estensioni. Nei capitoli successivi questi problemi vengono affrontati su
+Bologna, dove la topologia reale e le distribuzioni skewed e peak rendono il
+traffico più concentrato e variabile.
+
+\section{Analisi dei contatori di attivazione}
+
+La \cref{tab:activation-manhattan} riassume i contatori più utili per
+interpretare le varianti. Le unità sono passi o eventi medi per simulazione;
+per \texttt{mp\_base} viene riportata la coppia switch da margine/interventi da
+massimo verde.
+
+\begin{table}[htbp]
+    \centering
+    \caption{Contatori medi di attivazione per simulazione.}
+    \label{tab:activation-manhattan}
+    \begin{tabular}{lrrr}
+        \toprule
+        Meccanismo & Low & Medium & High \\
+        \midrule
+        \texttt{mp\_base}: switch / max-green & 6071 / 91 & 8591 / 40 & 10184 / 21 \\
+        LTA: switch / max-green & 5273 / 260 & 7566 / 158 & 9106 / 90 \\
+        Nmin: passi di hold & 0,0 & 2,4 & 23,2 \\
+        Fairness: bonus positivi & 5584 & 7951 & 9538 \\
+        Spillback: passi bloccati & 0,0 & 0,0 & 0,0 \\
+        Platoon: passi estesi & 113,6 & 227,0 & 288,8 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+I contatori evitano due letture superficiali. Una regola può attivarsi spesso
+senza migliorare, come fairness e platoon; oppure può non attivarsi affatto,
+come spillback e margine relativo. In entrambi i casi il risultato numerico
+diventa interpretabile, invece di restare una semplice classifica.
+
+\section{Confronto complessivo}
+
+La campagna supporta con chiarezza l'ipotesi principale: su Manhattan
+$8\times8$ con domanda uniforme, il controllo Max-Pressure riduce in modo ampio attesa,
+viaggio e time loss rispetto a \texttt{program0} nativo, mantenendo censura nulla. Il
+\texttt{mp\_base} da solo riduce l'attesa del 59,46\%, 55,93\% e 52,66\% nei
+tre livelli. Non è quindi necessario un modulo specialistico per ottenere il
+beneficio fondamentale.
+
+Tra le estensioni, Nmin è la scelta più efficace a domanda bassa e media,
+principalmente grazie al minimo verde più corto. A domanda alta fairness,
+platoon, Nmin e \texttt{mp\_base} sono compresi entro 0,26 secondi di attesa. La classifica
+nominale non deve oscurare tale prossimità. LTA e downstream mostrano invece
+che aggiungere prudenza o informazione non produce automaticamente una politica
+migliore: una regola utile in congestione può costare capacità quando il
+fenomeno bersaglio è assente.
+
+Il piano \texttt{fixed\_program0} rimane quasi costante tra 65,85 e 67,75 secondi di attesa. Ciò
+non significa che il traffico non aumenti: viaggio e time loss peggiorano e la
+velocità scende. Significa piuttosto che il ciclo statico impone una componente dominante
+di ritardo anche in low, mentre il Max-Pressure evita verdi assegnati a
+movimenti con poca domanda. La rete regolare e l'assenza di offset coordinati
+favoriscono questo vantaggio locale. Non si può estendere la conclusione a un
+piano fisso ottimizzato per ogni profilo di domanda.
+
+\section{Indicazioni ricavate per lo scenario reale}
+
+La campagna Manhattan chiarisce il ruolo del Max-Pressure di base: è già un
+riferimento forte e ogni estensione deve giustificare il proprio costo. Nmin
+mostra che ridurre il minimo verde può essere molto efficace quando il traffico
+è leggero, ma anche che il guadagno non coincide sempre con l'hold dinamico
+della formula. Spillback, al contrario, non può essere valutato davvero se la
+domanda non produce code a valle sufficientemente critiche.
+
+Da questi risultati nasce il passaggio a Bologna. La griglia regolare dimostra
+che il controllo adattivo può funzionare, ma non riproduce corridoi dominanti,
+picchi temporali e programmi semaforici già calibrati sulla topologia. Nella
+rete reale il problema diventa quindi più selettivo: capire quando convenga
+usare Max-Pressure, quando conservare il piano nativo e quando attivare una
+variante specialistica.
+
+\printbibliography[heading=bibintoc,title={Riferimenti bibliografici}]
 
 \end{document}

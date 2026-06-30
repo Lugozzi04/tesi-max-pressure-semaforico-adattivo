@@ -1,12 +1,12 @@
 # Fdb version 4
-["biber tesi"] 1782488506.91639 "tesi.bcf" "tesi.bbl" "tesi" 1782489149.4409 0
+["biber tesi"] 1782488506.91639 "tesi.bcf" "tesi.bbl" "tesi" 1782840164.99158 0
   "bibliografia.bib" 1781787691.55304 9334 d585f164020890748c92156c49e3d7df ""
-  "tesi.bcf" 1782489149.35949 110591 50f711efb4ec160917019778203781d3 "pdflatex"
+  "tesi.bcf" 1782840164.90504 110591 50f711efb4ec160917019778203781d3 "pdflatex"
   (generated)
   "tesi.bbl"
   "tesi.blg"
   (rewritten before read)
-["pdflatex"] 1782489148.09051 "tesi.tex" "tesi.pdf" "tesi" 1782489149.4411 0
+["pdflatex"] 1782840163.46734 "tesi.tex" "tesi.pdf" "tesi" 1782840164.99176 0
   "/etc/texmf/web2c/texmf.cnf" 1781181955.21747 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf-pc.enc" 1698694482 3136 bbe665bd0bb471a2da1e8fd326cff9fa ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf.enc" 1698694482 2914 fdbc4a54b9bc76f4551b5303f2737d33 ""
@@ -45,7 +45,9 @@
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/txmiaSTbb.tfm" 1569879884 920 99acdf374993fd46fd345f9cac168080 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/txmiaX.tfm" 1634244313 1716 a6b113dfe808a82f532d14b1f370053f ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/txsys.tfm" 1699567298 1660 d580b6f461bbd2ab53b1fd3851108c0e ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/public/txfonts/t1xbtt.tfm" 1136768653 1436 f00b2a275be56a8355f5c3b07a5a7a4c ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/txfonts/t1xtt.tfm" 1136768653 1384 8943063000d26272532f74ca134dfecd ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/public/txfonts/t1xttsl.tfm" 1136768653 1624 fb8f48c6308ace0a799f9278aba03e18 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/NewTXMI.pfb" 1572128992 32409 1452fa0ce4fabfb48acd5d077e296f6d ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/NewTXMI7.pfb" 1572128992 34733 61fa3c01fac511e451670c1b454ff211 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/txexs.pfb" 1621283831 33424 f912ebe54685d0a65d3c046e3d517e38 ""
@@ -54,6 +56,7 @@
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/ztmb.pfb" 1698694482 255251 958c6ad4e5518904a53cf1118c612893 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/ztmr.pfb" 1698694482 286816 82db2bfe6920054b1a43661c07078412 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/ztmri.pfb" 1698694482 248316 6c047e35119cde1bffb3263909816feb ""
+  "/usr/share/texlive/texmf-dist/fonts/type1/public/txfonts/t1xbtt.pfb" 1136849748 26580 8886cc7827569e05fd10df25f221aef6 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/txfonts/t1xtt.pfb" 1136849748 26301 f08b3c26ea42c3177a262c2ac37d6a91 ""
   "/usr/share/texlive/texmf-dist/fonts/vf/public/newtx/ntx-Regular-tlf-ot1.vf" 1583272976 956 44be8e0aea9c6d145fc21c9948a6b4b5 ""
   "/usr/share/texlive/texmf-dist/fonts/vf/public/newtx/ntxexx.vf" 1699567298 1716 73c8d39d4c3ace9ec98a8f066bb3b494 ""
@@ -304,6 +307,7 @@
   "/usr/share/texlive/texmf-dist/tex/latex/tools/longtable.sty" 1698955022 12935 94a3291359b5f73ff1b19345a6983105 ""
   "/usr/share/texlive/texmf-dist/tex/latex/tools/tabularx.sty" 1698869629 7147 d45559f8a31b8c53ada0640516660003 ""
   "/usr/share/texlive/texmf-dist/tex/latex/translations/translations.sty" 1644096163 44247 2188b95d0ee74e31eca4d316263c58a7 ""
+  "/usr/share/texlive/texmf-dist/tex/latex/txfonts/t1txtt.fd" 1137111002 1324 7b6c95370a64cd8c7620cbefefb53dba ""
   "/usr/share/texlive/texmf-dist/tex/latex/url/url.sty" 1388531844 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
   "/usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty" 1700082560 55487 80a65caedd3722f4c20a14a69e785d8f ""
   "/usr/share/texlive/texmf-dist/tex/latex/xkeyval/xkeyval.sty" 1655411236 4937 4ce600ce9bd4ec84d0250eb6892fcf4f ""
@@ -316,13 +320,15 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1781789706.27733 5349216 bf3a80e68d946c7acd95ff030fd9bb63 ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1781789710 6832302 834702b7db51e8127b78b0fb6308da0e ""
-  "img/Logo_A_Positivo_Colore.png" 1782207850.94507 45702 e8a9122afa322364135b2247b5386518 ""
-  "tesi.aux" 1782489149.34376 17350 fb81f9d161e339ae1658bfcddeaf0641 "pdflatex"
-  "tesi.bbl" 1782488507.30179 42570 3af3843833d38382e354eea41129148a "biber tesi"
-  "tesi.out" 1782489149.35812 12888 09d7e99d19ed6de0838fba869bf9079f "pdflatex"
-  "tesi.run.xml" 1782489149.36148 2313 39f255d0c0a315c7cad3c120f97dc340 "pdflatex"
-  "tesi.tex" 1782489142.10215 60362 0c782ad40511d37df8ef653331a14908 ""
-  "tesi.toc" 1782489149.36148 6173 653427dc8cc3b8f30a83ed62e8b64052 "pdflatex"
+  "figures/sumo_manhattan_intersection.png" 1782840129.87757 6992 151f138ffd1164ad7ba19b3aa01fc00c ""
+  "figures/sumo_manhattan_overview.png" 1782840129.87697 8521 05cf8b9af90bcb78b00ac690d2526870 ""
+  "img/Logo_A_Positivo_Colore.png" 1782840129.87826 45702 e8a9122afa322364135b2247b5386518 ""
+  "tesi.aux" 1782840164.88779 24411 ca2af4ce3bbef5944b865877c995cd97 "pdflatex"
+  "tesi.bbl" 1782489493.61861 42570 3af3843833d38382e354eea41129148a "biber tesi"
+  "tesi.out" 1782840164.90379 19402 be79dff2ec3096f02afe924b321f4c64 "pdflatex"
+  "tesi.run.xml" 1782840164.90701 2313 39f255d0c0a315c7cad3c120f97dc340 "pdflatex"
+  "tesi.tex" 1782840129.87365 88363 12e736f8ea34fbfb7c77ac809dc829ce ""
+  "tesi.toc" 1782840164.90701 9126 c47e337bdca9ebbfeef1d5129321b3fb "pdflatex"
   (generated)
   "tesi.aux"
   "tesi.bcf"
