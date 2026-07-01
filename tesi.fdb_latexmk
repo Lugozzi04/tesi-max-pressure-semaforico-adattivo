@@ -1,12 +1,12 @@
 # Fdb version 4
-["biber tesi"] 1782488506.91639 "tesi.bcf" "tesi.bbl" "tesi" 1782840164.99158 0
-  "bibliografia.bib" 1781787691.55304 9334 d585f164020890748c92156c49e3d7df ""
-  "tesi.bcf" 1782840164.90504 110591 50f711efb4ec160917019778203781d3 "pdflatex"
+["biber tesi"] 1782908812.73901 "tesi.bcf" "tesi.bbl" "tesi" 1782909580.04947 0
+  "bibliografia.bib" 1782908812.26668 9465 4b397e3dcb606af3c491458b2c1ffde8 ""
+  "tesi.bcf" 1782909579.96005 110883 50a038a170a2ea04986a9ef00ab6eeeb "pdflatex"
   (generated)
   "tesi.bbl"
   "tesi.blg"
   (rewritten before read)
-["pdflatex"] 1782840163.46734 "tesi.tex" "tesi.pdf" "tesi" 1782840164.99176 0
+["pdflatex"] 1782909578.14276 "tesi.tex" "tesi.pdf" "tesi" 1782909580.04967 0
   "/etc/texmf/web2c/texmf.cnf" 1781181955.21747 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf-pc.enc" 1698694482 3136 bbe665bd0bb471a2da1e8fd326cff9fa ""
   "/usr/share/texlive/texmf-dist/fonts/enc/dvips/newtx/ntx-ec-tlf.enc" 1698694482 2914 fdbc4a54b9bc76f4551b5303f2737d33 ""
@@ -23,6 +23,7 @@
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/NewTXMI.tfm" 1572128992 1408 ef71a9098da4d5a1a85b5920860b6731 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/NewTXMI7.tfm" 1572128992 1556 4df22ac3e5cc03ff0898d83d8817c6cf ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Bold-tlf-t1.tfm" 1698694482 11576 2c5382fb8ab907c80b8ce60923e4c09a ""
+  "/usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-BoldItalic-tlf-t1.tfm" 1698694482 11640 3f1e24d85c8c15d0d547a3c3185ca4f8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Italic-tlf-t1.tfm" 1698694482 11540 3e196d34de484a386065c6c3b6e4dc74 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-ot1.tfm" 1600636029 3008 ca0c83ca288d9f1c5d2fca0e8e268f10 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/newtx/ntx-Regular-tlf-ot1r.tfm" 1690487162 3056 db59b44fb00cc29b676bd92c4dc6750f ""
@@ -54,6 +55,7 @@
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb" 1635022465 56686 b959be5e2e4a0232f5aa4c1c4be4574a ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/txsys.pfb" 1699567298 45943 7899c7ea4fdd83f3625178689816dcee ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/ztmb.pfb" 1698694482 255251 958c6ad4e5518904a53cf1118c612893 ""
+  "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/ztmbi.pfb" 1698694482 260277 d8cc942b73ad2a9ea225abf808398c6d ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/ztmr.pfb" 1698694482 286816 82db2bfe6920054b1a43661c07078412 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/newtx/ztmri.pfb" 1698694482 248316 6c047e35119cde1bffb3263909816feb ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/txfonts/t1xbtt.pfb" 1136849748 26580 8886cc7827569e05fd10df25f221aef6 ""
@@ -261,6 +263,7 @@
   "/usr/share/texlive/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg" 1279039959 678 4792914a8f45be57bb98413425e4c7af ""
   "/usr/share/texlive/texmf-dist/tex/latex/listings/listings.cfg" 1677530001 1829 d8258b7d94f5f955e70c623e525f9f45 ""
   "/usr/share/texlive/texmf-dist/tex/latex/listings/listings.sty" 1677530001 80947 75a96bb4c9f40ae31d54a01d924df2ff ""
+  "/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty" 1677530001 205154 31132370016e8c97e49bc3862419679b ""
   "/usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty" 1677530001 77021 d05e9115c67855816136d82929db8892 ""
   "/usr/share/texlive/texmf-dist/tex/latex/logreq/logreq.def" 1284153563 1620 fb1c32b818f2058eca187e5c41dfae77 ""
   "/usr/share/texlive/texmf-dist/tex/latex/logreq/logreq.sty" 1284153563 6187 b27afc771af565d3a9ff1ca7d16d0d46 ""
@@ -320,15 +323,18 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1781789706.27733 5349216 bf3a80e68d946c7acd95ff030fd9bb63 ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1781789710 6832302 834702b7db51e8127b78b0fb6308da0e ""
-  "figures/sumo_manhattan_intersection.png" 1782840129.87757 6992 151f138ffd1164ad7ba19b3aa01fc00c ""
-  "figures/sumo_manhattan_overview.png" 1782840129.87697 8521 05cf8b9af90bcb78b00ac690d2526870 ""
-  "img/Logo_A_Positivo_Colore.png" 1782840129.87826 45702 e8a9122afa322364135b2247b5386518 ""
-  "tesi.aux" 1782840164.88779 24411 ca2af4ce3bbef5944b865877c995cd97 "pdflatex"
-  "tesi.bbl" 1782489493.61861 42570 3af3843833d38382e354eea41129148a "biber tesi"
-  "tesi.out" 1782840164.90379 19402 be79dff2ec3096f02afe924b321f4c64 "pdflatex"
-  "tesi.run.xml" 1782840164.90701 2313 39f255d0c0a315c7cad3c120f97dc340 "pdflatex"
-  "tesi.tex" 1782840129.87365 88363 12e736f8ea34fbfb7c77ac809dc829ce ""
-  "tesi.toc" 1782840164.90701 9126 c47e337bdca9ebbfeef1d5129321b3fb "pdflatex"
+  "figures/sumo_bologna_congestion_peak.png" 1781700782.45143 25946 a73a781ce35ba6fa8fd3d5c2e798cc88 ""
+  "figures/sumo_bologna_intersection.png" 1781700160.93785 15496 066880c81c2d518c06a9b846bf883c40 ""
+  "figures/sumo_bologna_overview.png" 1781699660.39016 74688 e5e5a81172ae12b8215a19ac3ab1bb1d ""
+  "figures/sumo_manhattan_intersection.png" 1781699039.83708 6992 151f138ffd1164ad7ba19b3aa01fc00c ""
+  "figures/sumo_manhattan_overview.png" 1781698623.78454 8521 05cf8b9af90bcb78b00ac690d2526870 ""
+  "img/Logo_A_Positivo_Colore.png" 1782840104.76586 45702 e8a9122afa322364135b2247b5386518 ""
+  "tesi.aux" 1782909579.94286 37262 6401b4cbb37b92875431be8b5e195ba2 "pdflatex"
+  "tesi.bbl" 1782908813.11918 43726 13e12621edc4608be81aad67e5ecfe2d "biber tesi"
+  "tesi.out" 1782909579.95815 29737 3ce1941905f8876614a55ca67da836ba "pdflatex"
+  "tesi.run.xml" 1782909579.96046 2313 39f255d0c0a315c7cad3c120f97dc340 "pdflatex"
+  "tesi.tex" 1782909576.12644 138360 3350a32fe4ecb8085b8d8fff968f7131 ""
+  "tesi.toc" 1782909579.96046 13986 c2761c4ee4205c075d706f7f5b9d41de "pdflatex"
   (generated)
   "tesi.aux"
   "tesi.bcf"
